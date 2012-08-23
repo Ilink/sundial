@@ -2,7 +2,7 @@ CC=gcc
 CFLAGS = -I/usr/include/ncurses -lncurses 
 
 sundial: main.o
-	$(CC) -o sundial main.o $(CFLAGS)
+	$(CC) -o build/sundial main.o $(CFLAGS)
 
 main.o: main.c
 
