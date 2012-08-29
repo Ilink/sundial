@@ -42,3 +42,11 @@ sin_altitude = cos(LHA)*cos(delta)*cos(lat)+sin(delta)sin(lat);
 
 // atan should be taken on the top and the bottom separately?
 tan_azimuth = -1*sin(LHA) / (tan(delta)*cos(φ)-sin(lat)cos(LHA));
+
+// to the land of the cartesian
+double const AU = 149600000;
+double cart_x = AU * sin(altitude) * cos(azimuth);
+double cart_y = AU * sin(altitude) * sin(azimuth);
+// i dont think we need Z
+
+// yay! now we just have to scale to fit the screen
