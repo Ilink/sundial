@@ -139,6 +139,23 @@ point_3d celestial(double jd){
 	return point;
 }
 
+s_coord spherical(int day, int hour, int minute, int second, double timezone){
+
+	double frac_year = 2*PI/365*(day-1+(hour-12)/24);
+	double eqtime = 229.18*(0.000075+0.001868*cos(frac_year)-0.032077*sin(frac_year)-0.014615*cos(2*frac_year)-0.040849*sin(2*frac_year));
+
+	double decl = 0.006918 - 0.399912*cos(frac_year)+0.070257*sin(frac_year) - 0.006758*cos(2*frac_year) + 0.000907*sin(2*frac_year)-0.002697*cos(3*frac_year)+0.00148*sin(3*frac_year);
+
+	double time_offset = eqtime-4*lng + 60*timezone;
+	double tst = hour*60+minute+sec/60+time_offset;
+	double ha = (tst/4) - 180;
+
+	s_coord coord;
+	s_coord.zenith = 1.0;
+	s_coord.altitude = 1.0;
+	s_coord.r = 1.0;
+}
+
 
 double awesome_calc(int year, int month, int day, 
 	int _hour, int min, int sec, double lat, double lng){
@@ -261,7 +278,7 @@ int main(){
 	b.x = 0;
 	b.y = 0;
 
-	double JD2 = get_jd(2012, 8, 7);
+	double JD2 = get_jd(2012, 8, 31);
 	double J2k = get_jd(2000, 1, 1);
 	point_3d sun_pos = celestial(JD2);
 
@@ -269,7 +286,7 @@ int main(){
 	printf("%f\n", JD2);
 	printf("%f\n", JD2-J2k);
 	printf("%f\n", get_ut());
-	
+
 	printf("%f\n", sun_pos.x);
 	printf("%f\n", sun_pos.y);
 	printf("%f\n", sun_pos.z);

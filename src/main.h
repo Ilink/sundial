@@ -20,3 +20,9 @@ typedef struct {
 	double y;
 	double z;
 } point_3d;
+
+typedef struct {
+	double zenith;
+	double altitude;
+	double r;
+} s_coord;
