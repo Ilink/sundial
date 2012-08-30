@@ -5,6 +5,7 @@
 #include "main.h"
 
 double PI = atan(1)*4;
+double jd2k = 2451545.0;
 
 int linear_eq(int y2, int x1, int x2){
 	int m = round(y2 / x1);
@@ -63,6 +64,28 @@ double get_jd(int year, int month, int day){
 	// 	4+367*(month-2-(month-14)/12*12)/12-3*((year+4900+(month-14)/12)/100)/4;
 }
 
+ecliptic_coord sun_pos(double jd){
+	ecliptic_coord coord;
+	double n = jd - jd2k;
+	// all in degrees
+	double L = 280.460 + 0.9856474*n; // mean ecliptic lng of the sun
+	while(L < 360){
+		L += 360;
+	}
+	double g = 357.528 + 0.9856003*n; // mean anomaly of the sun
+	while(g < 360){
+		g += 360;
+	}
+	double lambda = L + 1.915 * sin(g) + 0.020 * sin(2*g);
+	double beta = 0; // ecliptic latitude
+	double R = 1.00014 - 0.01671*cos(g) - 0.00014*cos(2*g);
+
+	// double alpha = atan()
+
+	coord.lat = 1.0;
+	coord.lng = 1.0;
+}
+
 celestial_coord celestial(double jd, double lng, double lat){
 	double rads = 180/PI;
 
@@ -93,12 +116,23 @@ celestial_coord celestial(double jd, double lng, double lat){
 	else alpha = a;
 
 	double delta = asin(sin(epsilon)*sin(lambda));
+	double R = 1.00014 - 0.01671*cos(g) - 0.00014*cos(2*g);
+
+	double X = R*cos(lambda);
+	double Y = R*cos(epsilon)*sin(lambda);
+	double Z = R*sin(epsilon)*sin(lambda);
 
 	celestial_coord coords;
 	coords.delta = delta;
 	coords.alpha = alpha;
+	coords.r = 1.00014 - 0.01671*cos(g) - 0.00014*cos(2*g);
 	
 	return coords;
+}
+
+3d_point celestial_to_cart(celestial_coord cel_coord){
+	3d_point point;
+	point.x = cel_coords.r * cos()
 }
 
 
