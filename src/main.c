@@ -1,15 +1,10 @@
 #include <ncurses.h>
 #include <stdio.h>
 #include <math.h>
+#include <time.h>
 #include "main.h"
 
-double const PI = atan(1)*4;
-
-// the typedef should go in the header
-typedef struct {
-	int x; 
-	int y;
-} point;
+double PI = atan(1)*4;
 
 int linear_eq(int y2, int x1, int x2){
 	int m = round(y2 / x1);
@@ -42,11 +37,76 @@ void draw_line(int x0, int y0, int x1, int y1, char render_char){
 	}
 }
 
+double get_ut(){
+	time_t rawtime;
+	struct tm *ptm;
+
+	time(&rawtime);
+	ptm = gmtime(&rawtime);
+
+	double sec = ptm->tm_sec / 60.0 / 60.0;
+	double min = ptm->tm_min / 60.0;
+	return ptm->tm_hour + sec + min;
+}
+
+double get_jd(int year, int month, int day){
+	double UT;
+	UT = get_ut();
+
+	int a = (month+9)/12;
+	int b = (7*(year+a))/4;
+	int c = 275 * month / 9;
+	return 367*year - b + c + day + 1721013.5 + UT/24;
+
+
+	// return (double) day-32075+1461*(year+4800+(month-14)/12) /
+	// 	4+367*(month-2-(month-14)/12*12)/12-3*((year+4900+(month-14)/12)/100)/4;
+}
+
+celestial_coord celestial(double jd, double lng, double lat){
+	double rads = 180/PI;
+
+	double j2k = get_jd(2000, 1, 1);
+	jd = j2k-jd;
+
+	double L = 280.461 * rads + .9856474 * rads * jd;
+	while(L < 360){
+		L += 360;
+	}
+
+	double g = 357.528 * rads + .9856003 * rads * jd;
+	while(g < 360){
+		g += 360;
+	}
+
+	double lambda = L + 1.915 * sin(g) + 0.020 * sin(2*g);
+	double epsilon = 23.439 - 0.0000004 * jd;
+
+	// RA (alpha) and Declination (delta)
+	double y = cos(epsilon) * sin(lambda);
+	double x = cos(lambda);
+
+	double a = atan(y/x);
+	double alpha;
+	if(x < 0) alpha = a + 180;
+	if(y < 0 && x > 0) alpha = a + 360;
+	else alpha = a;
+
+	double delta = asin(sin(epsilon)*sin(lambda));
+
+	celestial_coord coords;
+	coords.delta = delta;
+	coords.alpha = alpha;
+	
+	return coords;
+}
+
+
 double awesome_calc(int year, int month, int day, 
 	int _hour, int min, int sec, double lat, double lng){
 
 	double twopi = 2*PI;
-	double pi_rad = PI/180;
+	double rad = PI/180;
 
 	int days_month[] = {0,31,28,31,30,31,30,31,31,30,31,30};
 	int days = 0;
@@ -62,12 +122,6 @@ double awesome_calc(int year, int month, int day,
 	int delta = year - 1949;
 	double jd = 32916.5 + delta * 365 + day + hour / 24;
 	double time = jd - 51545;
-
-	double mnlong = 280.460 + .9856474 * time;
-	double mnlong = mnlong % 360;
-	double mnlong[mnlong < 0] <- mnlong[mnlong < 0] + 360
-
-
 
 	return (double) 1.0;
 
@@ -160,7 +214,7 @@ double awesome_calc(int year, int month, int day,
 }
 
 int main(){
-	
+
 	point a;
 	a.x = 5;
 	a.y = 5;
@@ -169,30 +223,37 @@ int main(){
 	b.x = 0;
 	b.y = 0;
 
-	
-	// printf("%d", y);
+	double JD2 = get_jd(2012, 8, 7);
+	double J2k = get_jd(2000, 1, 1);
+	printf("%f\n", J2k);
+	printf("%f\n", JD2);
+	printf("%f\n", JD2-J2k);
+	printf("%f\n", get_ut());
+	printf("%f\n", get_jd());
 
-	// Initialize ncurses
-	initscr();
-	clear();
-	noecho();
-	cbreak();
-	keypad(stdscr, TRUE);
-	curs_set(0);	
+	// celestial_coord test = celestial()
 
-	// test symbol
-	char main_char = '@';
-	char ch;
+	// // Initialize ncurses
+	// initscr();
+	// clear();
+	// noecho();
+	// cbreak();
+	// keypad(stdscr, TRUE);
+	// curs_set(0);	
 
-	// Rendering loop
+	// // test symbol
+	// char main_char = '@';
+	// char ch;
 
-	draw_line(1,1,20,10, '@');
-	refresh();
-	while(1) {
-		ch = getch();
-		if(ch == 'q' || ch == 'Q') {
-			break;
-		}
-	}
-	endwin(); // clear ncurses's junk
+	// // Rendering loop
+
+	// draw_line(1,1,20,10, '@');
+	// refresh();
+	// while(1) {
+	// 	ch = getch();
+	// 	if(ch == 'q' || ch == 'Q') {
+	// 		break;
+	// 	}
+	// }
+	// endwin(); // clear ncurses's junk
 }
