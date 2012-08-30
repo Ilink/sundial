@@ -15,8 +15,8 @@ typedef struct {
 	double lng;
 } ecliptic_coord;
 
-typedef stuct {
+typedef struct {
 	double x;
 	double y;
 	double z;
-} 3d_point;
+} point_3d;

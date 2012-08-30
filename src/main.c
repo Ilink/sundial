@@ -2,9 +2,10 @@
 #include <stdio.h>
 #include <math.h>
 #include <time.h>
+#include <stdlib.h>
 #include "main.h"
 
-double PI = atan(1)*4;
+double const PI = atan(1)*4;
 double jd2k = 2451545.0;
 
 int linear_eq(int y2, int x1, int x2){
@@ -64,29 +65,29 @@ double get_jd(int year, int month, int day){
 	// 	4+367*(month-2-(month-14)/12*12)/12-3*((year+4900+(month-14)/12)/100)/4;
 }
 
-ecliptic_coord sun_pos(double jd){
-	ecliptic_coord coord;
-	double n = jd - jd2k;
-	// all in degrees
-	double L = 280.460 + 0.9856474*n; // mean ecliptic lng of the sun
-	while(L < 360){
-		L += 360;
-	}
-	double g = 357.528 + 0.9856003*n; // mean anomaly of the sun
-	while(g < 360){
-		g += 360;
-	}
-	double lambda = L + 1.915 * sin(g) + 0.020 * sin(2*g);
-	double beta = 0; // ecliptic latitude
-	double R = 1.00014 - 0.01671*cos(g) - 0.00014*cos(2*g);
+// ecliptic_coord sun_pos(double jd){
+// 	ecliptic_coord coord;
+// 	double n = jd - jd2k;
+// 	// all in degrees
+// 	double L = 280.460 + 0.9856474*n; // mean ecliptic lng of the sun
+// 	while(L < 360){
+// 		L += 360;
+// 	}
+// 	double g = 357.528 + 0.9856003*n; // mean anomaly of the sun
+// 	while(g < 360){
+// 		g += 360;
+// 	}
+// 	double lambda = L + 1.915 * sin(g) + 0.020 * sin(2*g);
+// 	double beta = 0; // ecliptic latitude
+// 	double R = 1.00014 - 0.01671*cos(g) - 0.00014*cos(2*g);
 
-	// double alpha = atan()
+// 	// double alpha = atan()
 
-	coord.lat = 1.0;
-	coord.lng = 1.0;
-}
+// 	coord.lat = 1.0;
+// 	coord.lng = 1.0;
+// }
 
-celestial_coord celestial(double jd, double lng, double lat){
+point_3d celestial(double jd){
 	double rads = 180/PI;
 
 	double j2k = get_jd(2000, 1, 1);
@@ -109,7 +110,7 @@ celestial_coord celestial(double jd, double lng, double lat){
 	double y = cos(epsilon) * sin(lambda);
 	double x = cos(lambda);
 
-	double a = atan(y/x);
+	double a = atan2(y,x);
 	double alpha;
 	if(x < 0) alpha = a + 180;
 	if(y < 0 && x > 0) alpha = a + 360;
@@ -126,13 +127,16 @@ celestial_coord celestial(double jd, double lng, double lat){
 	coords.delta = delta;
 	coords.alpha = alpha;
 	coords.r = 1.00014 - 0.01671*cos(g) - 0.00014*cos(2*g);
-	
-	return coords;
-}
 
-3d_point celestial_to_cart(celestial_coord cel_coord){
-	3d_point point;
-	point.x = cel_coords.r * cos()
+	point_3d point;
+	point.x = X;
+	point.y = Y;
+	point.z = Z;
+	// double X = R*cos(lambda);
+	// double Y = R*cos(epsilon)*sin(lambda);
+	// double Z = R*sin(epsilon)*sin(lambda);
+	
+	return point;
 }
 
 
@@ -259,12 +263,16 @@ int main(){
 
 	double JD2 = get_jd(2012, 8, 7);
 	double J2k = get_jd(2000, 1, 1);
+	point_3d sun_pos = celestial(JD2);
+
 	printf("%f\n", J2k);
 	printf("%f\n", JD2);
 	printf("%f\n", JD2-J2k);
 	printf("%f\n", get_ut());
-	printf("%f\n", get_jd());
-
+	
+	printf("%f\n", sun_pos.x);
+	printf("%f\n", sun_pos.y);
+	printf("%f\n", sun_pos.z);
 	// celestial_coord test = celestial()
 
 	// // Initialize ncurses
