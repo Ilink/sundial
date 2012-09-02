@@ -137,8 +137,6 @@ double calc_sun_rad_vector(double t) {
 	return (1.000001018 * (1 - e * e)) / (1 + e * cos(deg_to_rad(v)));
 }
 
-
-
 double calc_mean_anomaly_sun(double t){
 	return 357.52911 + t * (35999.05029 - 0.0001537 * t);
 }
@@ -171,7 +169,6 @@ double calc_eq_time(double t){
 
 	double Etime = y * sin2l0 - 2.0 * e * sinm + 4.0 * e * y * sinm * cos2l0 - 0.5 * y * y * sin4l0 - 1.25 * e * e * sin2m;
 	return rad_to_deg(Etime)*4.0; // in minutes of time
-
 }
 
 s_coord2 celestial(double jd, double lat, double lng){
@@ -188,10 +185,7 @@ s_coord2 celestial(double jd, double lat, double lng){
 
 	double eqtime = calc_eq_time(time);
 	printf("eqtime: %f\n", eqtime);
-	//
-	// calc az el
-	// calcAzEl(1, time, hour, lat, lng, tz)
-	//
+
 	double delta = calc_declination(time);
 	printf("delta: %f\n", delta);
 	double true_solar_time = hour + eqtime + 4.0 * lng - 60.0 * tz;
