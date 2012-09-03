@@ -195,7 +195,7 @@ s_coord2 celestial(double jd, double lat, double lng){
 
 	double delta = calc_declination(time);
 	printf("delta: %f\n", delta);
-	double true_solar_time = hour + eqtime + 4.0 * lng - 60.0 * tz;
+	double true_solar_time = hour + (eqtime + 4.0 * lng - 60.0 * tz);
 	while(true_solar_time > 1440) true_solar_time -= 1440;
 	double ha = true_solar_time / 4.0 - 180.0;
 	if(ha < -180) ha += 360.0;
