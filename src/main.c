@@ -49,6 +49,26 @@ double get_ut(){
 	return time;
 }
 
+double get_local(){
+	time_t rawtime;
+	struct tm *ptm;
+
+	time(&rawtime);
+	ptm = localtime(&rawtime);
+
+	double sec = ptm->tm_sec;
+	double min = ptm->tm_min;
+	double hour = ptm->tm_hour;
+
+	double time = hour*60.0 + min + sec/60.0;
+
+	printf("seconds: %f\n", sec);
+	printf("minutes: %f\n", min);
+	printf("hours: %f\n", hour);
+
+	return time;
+}
+
 double deg_to_rad(double x){
 	return PI * x / 180.0;
 }
@@ -128,6 +148,10 @@ double calc_sun_app_lng(double t){
 	double o = l0 + c;
 	double omega = 125.04 - 1934.136 * t;
 	double lambda = o - 0.00569 - 0.00478 * sin(deg_to_rad(omega));
+	printf("app_lng l0: %f\n", l0);
+	printf("app_lng c: %f\n", c);
+	printf("app_lng o: %f\n", o);
+	printf("app_lng omega: %f\n", omega);
 	return lambda;
 }
 
@@ -150,10 +174,17 @@ double calc_mean_anomaly_sun(double t){
 
 // returns degrees
 double calc_declination(double t){
-	double e = calc_obliq_corr(t);
-	double lambda = calc_sun_app_lng(t);
+	double e = calc_obliq_corr(t); //todo check me
+	double lambda = calc_sun_app_lng(t); // check meeeeee
 
-	return rad_to_deg(asin(sin(deg_to_rad(e)) * sin(deg_to_rad(lambda))));
+	printf("decl e: %f\n", e);
+	printf("decl lambda: %f\n", lambda);
+
+	double sint = sin(deg_to_rad(e)) * sin(deg_to_rad(lambda));
+	double theta = rad_to_deg(asin(sint));
+	return theta;
+
+	// return rad_to_deg(asin(sin(deg_to_rad(e)) * sin(deg_to_rad(lambda))));
 }
 
 double calc_eq_time(double t){
@@ -162,17 +193,33 @@ double calc_eq_time(double t){
 	double l = calc_mean_lng_sun(t);
 	printf("l: %f\n", l);
 	double e = 0.016708634 - t * (0.000042037 + 0.0000001267 * t);
+	printf("e: %f\n", e);
 	double m = calc_mean_anomaly_sun(t);
+	printf("m: %f\n", m);
 
 
 	double y = tan(deg_to_rad(epsilon)/2.0);
 	y *= y;
 
-	double sin2l0 = sin(2.0 * deg_to_rad(l));
+	double test = 2.0 * deg_to_rad(l);
+	double sin2l0 = sin(test);
+	// double sin2l0 = sin(2.0 * deg_to_rad(l));
 	double sinm   = sin(deg_to_rad(m));
 	double cos2l0 = cos(2.0 * deg_to_rad(l));
 	double sin4l0 = sin(4.0 * deg_to_rad(l));
 	double sin2m  = sin(2.0 * deg_to_rad(m));
+
+	printf("sin2l0: %f\n", sin2l0);
+	printf("sinm: %f\n", sinm);
+	printf("cos2l0: %f\n", cos2l0);
+	printf("sin4l0: %f\n", sin4l0);
+	printf("sin2m: %f\n", sin2m);
+
+	sin2l0 = -0.5486700881092892;
+	sinm = -0.8678243339510023;
+	cos2l0 = 0.8360389550817263;
+	sin4l0 = -0.9174191342949778;
+	sin2m = 0.8623937246406765;
 
 	double Etime = y * sin2l0 - 2.0 * e * sinm + 4.0 * e * y * sinm * cos2l0 - 0.5 * y * y * sin4l0 - 1.25 * e * e * sin2m;
 	return rad_to_deg(Etime)*4.0; // in minutes of time
@@ -180,6 +227,7 @@ double calc_eq_time(double t){
 
 s_coord2 celestial(double jd, double lat, double lng){
 	double hour = get_ut();
+	hour = get_local();
 	// hour = 12;
 	printf("Hour: %f\n", hour);
 	double tz = -8.0; // todo: un-hardcode
@@ -194,20 +242,31 @@ s_coord2 celestial(double jd, double lat, double lng){
 	printf("eqtime: %f\n", eqtime);
 
 	double delta = calc_declination(time);
-	printf("delta: %f\n", delta);
-	double true_solar_time = hour + (eqtime + 4.0 * lng - 60.0 * tz);
-	while(true_solar_time > 1440) true_solar_time -= 1440;
+	printf("delta (decl): %f\n", delta);
+	double solar_time_fix = eqtime + 4.0 * lng - 60.0 * tz;
+	// double true_solar_time = hour + (eqtime + 4.0 * lng - 60.0 * tz);
+	double true_solar_time = hour + solar_time_fix;
+	printf("solar_time_fix: %f\n", solar_time_fix);
+	printf("uncorr true solar time: %f\n", true_solar_time);
+	while(true_solar_time > 1440) true_solar_time -= 1440.0;
 	double ha = true_solar_time / 4.0 - 180.0;
 	if(ha < -180) ha += 360.0;
+	printf("true solar time: %f\n", true_solar_time);
 
 	printf("ha: %f\n", ha);
 
 	double r = calc_sun_rad_vector(time);
 	double ha_rad = deg_to_rad(ha);
+	printf("ha_rad: %f\n", ha_rad);
 	double cos_zenith = sin(deg_to_rad(lat)) * sin(deg_to_rad(delta)) + cos(deg_to_rad(lat)) * cos(deg_to_rad(delta)) * cos(ha_rad);
+
+	printf("(pre) cos zenith: %f\n", cos_zenith);
+
 	if(cos_zenith > 1.0) cos_zenith = 1.0;
 	else if (cos_zenith < -1.0) cos_zenith = -1.0;
 	double zenith = rad_to_deg(acos(cos_zenith));
+	printf("cos zenith: %f\n", cos_zenith);
+	printf("zenith: %f\n", zenith);
 
 	double azimuth_denom = cos(deg_to_rad(lat))*sin(deg_to_rad(zenith));
 	double azimuth;
@@ -215,12 +274,11 @@ s_coord2 celestial(double jd, double lat, double lng){
 		printf("%s\n", "azi denon great than 0.001");
 		double azimuth_rad = ((sin(deg_to_rad(lat)) * cos(deg_to_rad(zenith))) - sin(deg_to_rad(delta))) / azimuth_denom;
 		if(fabs(azimuth_rad)>1.0) {
-			if(azimuth_rad < 0) azimuth_rad = -1.0;
+			if(azimuth_rad < 0.0) azimuth_rad = -1.0;
 			else azimuth_rad = 1.0;
 		}
 		azimuth = 180.0 - rad_to_deg(acos(azimuth_rad));
-		double temp = rad_to_deg(acos(azimuth_rad));
-		printf("azrad: %f\n", temp);
+		printf("azrad: %f\n", azimuth_rad);
 		if(ha > 0.0) azimuth = -azimuth;
 	} else {
 		printf("%s\n", "azi denon less than 0.001");
@@ -238,6 +296,8 @@ s_coord2 celestial(double jd, double lat, double lng){
 	} else {
 		double te = tan(deg_to_rad(eo_ele));
 		if(eo_ele > 5.0) {
+			ref_corr = 58.1 / te - 0.07 / (te*te*te) + 0.000086 / (te*te*te*te*te);
+		} else if(eo_ele > -0.575) {
 			ref_corr = 1735.0 + eo_ele * (-518.2 + eo_ele * (103.4 + eo_ele * (-12.79 + eo_ele * 0.711)));
 		} else {
 			ref_corr = -20.774 / te;
@@ -250,7 +310,7 @@ s_coord2 celestial(double jd, double lat, double lng){
 	printf("Refraction correction%f\n", ref_corr);
 
 	s_coord2 coord;
-	printf("Azimuth%f\n", azimuth);
+	printf("Azimuth: %f\n", azimuth);
 	coord.azimuth = azimuth;
 	coord.r = r;
 	double el = floor((90.0-solar_zenith)*100+0.5)/100.0;
@@ -272,7 +332,7 @@ int main(){
 	double JD2 = get_jd(2012, 8, 31);
 	printf("JD 8/31/12: %f\n", JD2);
 	double J2k = get_jd(2000, 1, 1);
-	s_coord2 sun_pos = celestial(JD2, 37.9232, 122.2937);
+	s_coord2 sun_pos = celestial(JD2, 37.9232, -122.2937);
 
 	printf("Radial dist: %f\n", sun_pos.r);
 	printf("Azimuth: %f\n", sun_pos.azimuth);
