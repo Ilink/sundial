@@ -3,17 +3,11 @@
 #include <math.h>
 #include <time.h>
 #include <stdlib.h>
+#include <pthread.h>
 #include "main.h"
 
 double const PI = atan(1)*4;
 double jd2k = 2451545.0;
-// int month_days[] = {0,31,28,31,30,31,30,31,31,30,31,30};
-
-int linear_eq(int y2, int x1, int x2){
-	int m = round(y2 / x1);
-	int y = m * (round(x2 - x1)) + y2;
-	return y;
-}
 
 void draw_line(int x0, int y0, int x1, int y1, char render_char){
 	int dx = abs(x1-x0);
@@ -61,6 +55,19 @@ double deg_to_rad(double x){
 
 double rad_to_deg(double x){
 	return 180.0 * x / PI;
+}
+
+point_3d spherical_to_cart(s_coord2* s_coord){
+	point_3d point;
+	double sin_elevation = sin(s_coord->elevation);
+	point.x = s_coord->r*sin_elevation*cos(s_coord->azimuth);
+	point.y = s_coord->r*sin_elevation*sin(s_coord->azimuth);
+	point.z = s_coord->r*cos(s_coord->elevation);
+	return point;
+}
+
+double au_to_km(double au){
+	return au*149598000.0;
 }
 
 // uses UT, not local time
@@ -173,7 +180,7 @@ double calc_eq_time(double t){
 
 s_coord2 celestial(double jd, double lat, double lng){
 	double hour = get_ut();
-	hour = 12;
+	// hour = 12;
 	printf("Hour: %f\n", hour);
 	double tz = -8.0; // todo: un-hardcode
 
@@ -204,19 +211,25 @@ s_coord2 celestial(double jd, double lat, double lng){
 
 	double azimuth_denom = cos(deg_to_rad(lat))*sin(deg_to_rad(zenith));
 	double azimuth;
-	if(abs(azimuth_denom) > 0.001){
+	if(fabs(azimuth_denom) > 0.001){
+		printf("%s\n", "azi denon great than 0.001");
 		double azimuth_rad = ((sin(deg_to_rad(lat)) * cos(deg_to_rad(zenith))) - sin(deg_to_rad(delta))) / azimuth_denom;
-		if(abs(azimuth_rad)>1.0) {
+		if(fabs(azimuth_rad)>1.0) {
 			if(azimuth_rad < 0) azimuth_rad = -1.0;
 			else azimuth_rad = 1.0;
 		}
 		azimuth = 180.0 - rad_to_deg(acos(azimuth_rad));
-		if(ha > 0.0) azimuth *= -1;
+		double temp = rad_to_deg(acos(azimuth_rad));
+		printf("azrad: %f\n", temp);
+		if(ha > 0.0) azimuth = -azimuth;
 	} else {
+		printf("%s\n", "azi denon less than 0.001");
 		if(lat > 0.0) azimuth = 180.0;
 		else azimuth = 0.0;
 	}
 	if (azimuth < 0) azimuth += 360.0;
+
+	printf("azimuth denom %f\n", azimuth_denom);
 
 	double ref_corr;
 	double eo_ele = 90.0 - zenith;
@@ -231,47 +244,20 @@ s_coord2 celestial(double jd, double lat, double lng){
 		}
 		ref_corr /= 3600.0;
 	}
+	printf("zenith %f\n", zenith);
 	double solar_zenith = zenith - ref_corr;
+	printf("solar zenith %f\n", solar_zenith);
+	printf("Refraction correction%f\n", ref_corr);
 
 	s_coord2 coord;
+	printf("Azimuth%f\n", azimuth);
 	coord.azimuth = azimuth;
-	coord.latitude = lat;
+	coord.r = r;
 	double el = floor((90.0-solar_zenith)*100+0.5)/100.0;
 	coord.elevation = el;
 
 	return coord;
 }
-
-s_coord spherical(int day, int hour, int minute, int sec, double timezone, double lat, double lng){
-
-	double frac_year = (2*PI/365)*(day-1+((hour-12)/24));
-
-	printf("%f\n", frac_year);
-
-	double eqtime = 229.18*(0.000075+0.001868*cos(frac_year)-1.0*0.032077*sin(frac_year)-0.014615*cos(2.0*frac_year)-0.040849*sin(2.0*frac_year));
-
-	printf("%f\n", eqtime);
-	eqtime = -0.21;
-
-	double decl = 0.006918 - 0.399912*cos(frac_year)+0.070257*sin(frac_year) - 0.006758*cos(2*frac_year) + 0.000907*sin(2*frac_year)-0.002697*cos(3*frac_year)+0.00148*sin(3*frac_year);
-	printf("%f\n", decl);
-
-
-	double time_offset = eqtime-4*lng + 60*timezone;
-	double tst = hour*60+minute+sec/60+time_offset;
-	double ha = (tst/4) - 180;
-
-	double zenith = acos(sin(lat)*sin(decl)+cos(lat)*cos(decl)*cos(ha));
-	double azimuth = -1*(sin(lat)*cos(zenith)-sin(decl)) / cos(lat)*sin(zenith);
-	
-
-	s_coord coord;
-	coord.zenith = zenith;
-	coord.altitude = azimuth;
-	coord.r = 1.0;
-	return coord;
-}
-
 
 int main(){
 
@@ -288,9 +274,18 @@ int main(){
 	double J2k = get_jd(2000, 1, 1);
 	s_coord2 sun_pos = celestial(JD2, 37.9232, 122.2937);
 
-	printf("Latitude: %f\n", sun_pos.latitude);
+	printf("Radial dist: %f\n", sun_pos.r);
 	printf("Azimuth: %f\n", sun_pos.azimuth);
 	printf("Elevation: %f\n", sun_pos.elevation);
+
+	// sun_pos.r = au_to_km(sun_pos.r);
+
+	point_3d sun_pos_cart = spherical_to_cart(&sun_pos);
+
+	printf("X: %f\n", sun_pos_cart.x);
+	printf("Y: %f\n", sun_pos_cart.y);
+	printf("Z: %f\n", sun_pos_cart.z);
+
 
 	// // Initialize ncurses
 	// initscr();
