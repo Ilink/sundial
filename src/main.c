@@ -170,14 +170,26 @@ void console_scale(s_coord2* coord){
 	struct winsize w;
 	ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
 
+	// these dont really work too well, they should be better
 	double x_ratio = (double) w.ws_col / 360.0;
 	double y_ratio = (double) w.ws_row / 360.0;
 
-	printf("col console: %i\t", w.ws_col);
-	printf("row console: %i\n", w.ws_row);
-
+	double new_azimuth = abs(w.ws_row - coord->azimuth * y_ratio);
 	coord->azimuth *= y_ratio;
+	coord->azimuth = new_azimuth;
+
+	// double new_ele = abs(w.ws_col - coord->elevation * x_ratio);
+	double new_ele = -1*(coord->elevation * x_ratio)+w.ws_col;
 	coord->elevation *= x_ratio;
+	coord->elevation = new_ele;
+
+	FILE *file; 
+	file = fopen("out.txt","a+");  
+	fprintf(file,"azi (x): %f\t", new_azimuth); 
+	fprintf(file,"ele (y): %f\n", new_ele); 
+	fprintf(file,"col console (x): %i\t", w.ws_col);
+	fprintf(file, "row console (y): %i\n\n", w.ws_row);
+	fclose(file);
 }
 
 // returns AUs
@@ -342,7 +354,7 @@ s_coord2 celestial(double jd, double lat, double lng, double increment){
 
 int main(){
 	
-	
+	remove("out.txt");
 	point a;
 	a.x = 5;
 	a.y = 5;
@@ -418,7 +430,8 @@ int main(){
 
 		x+=floor(n);
 		y+=floor(n);
-		mvaddch(floor(sun_pos.elevation), floor(sun_pos.azimuth), main_char);
+		// mvaddch(floor(sun_pos.elevation), floor(sun_pos.azimuth), main_char);
+		mvaddch(floor(sun_pos.azimuth), floor(sun_pos.elevation), main_char);
 		// mvaddch(1, floor(sun_pos.azimuth), main_char);
 		// mvaddch(x, y, main_char);
 		// mvaddch(j, j, main_char);
