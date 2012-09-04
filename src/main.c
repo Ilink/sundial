@@ -4,7 +4,12 @@
 #include <time.h>
 #include <stdlib.h>
 #include <pthread.h>
+#include <sys/ioctl.h>
+#include <unistd.h>
 #include "main.h"
+
+#define printf(fmt, ...) (0)
+
 
 double const PI = atan(1)*4;
 double jd2k = 2451545.0;
@@ -59,6 +64,8 @@ double get_local(){
 	double sec = ptm->tm_sec;
 	double min = ptm->tm_min;
 	double hour = ptm->tm_hour;
+
+	hour-=12;
 
 	double time = hour*60.0 + min + sec/60.0;
 
@@ -159,6 +166,20 @@ double calc_earth_ecc(double t){
 	return 0.016708634 - t * (0.000042037 + 0.0000001267 * t);
 }
 
+void console_scale(s_coord2* coord){
+	struct winsize w;
+	ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
+
+	double x_ratio = (double) w.ws_col / 360.0;
+	double y_ratio = (double) w.ws_row / 360.0;
+
+	printf("col console: %i\t", w.ws_col);
+	printf("row console: %i\n", w.ws_row);
+
+	coord->azimuth *= y_ratio;
+	coord->elevation *= x_ratio;
+}
+
 // returns AUs
 double calc_sun_rad_vector(double t) {
 	double l0 = calc_mean_lng_sun(t);
@@ -225,9 +246,9 @@ double calc_eq_time(double t){
 	return rad_to_deg(Etime)*4.0; // in minutes of time
 }
 
-s_coord2 celestial(double jd, double lat, double lng){
+s_coord2 celestial(double jd, double lat, double lng, double increment){
 	double hour = get_ut();
-	hour = get_local();
+	hour = get_local()+increment;
 	// hour = 12;
 	printf("Hour: %f\n", hour);
 	double tz = -8.0; // todo: un-hardcode
@@ -246,8 +267,8 @@ s_coord2 celestial(double jd, double lat, double lng){
 	double solar_time_fix = eqtime + 4.0 * lng - 60.0 * tz;
 	// double true_solar_time = hour + (eqtime + 4.0 * lng - 60.0 * tz);
 	double true_solar_time = hour + solar_time_fix;
-	printf("solar_time_fix: %f\n", solar_time_fix);
-	printf("uncorr true solar time: %f\n", true_solar_time);
+	// printf("solar_time_fix: %f\n", solar_time_fix);
+	// printf("uncorr true solar time: %f\n", true_solar_time);
 	while(true_solar_time > 1440) true_solar_time -= 1440.0;
 	double ha = true_solar_time / 4.0 - 180.0;
 	if(ha < -180) ha += 360.0;
@@ -320,7 +341,8 @@ s_coord2 celestial(double jd, double lat, double lng){
 }
 
 int main(){
-
+	
+	
 	point a;
 	a.x = 5;
 	a.y = 5;
@@ -332,42 +354,81 @@ int main(){
 	double JD2 = get_jd(2012, 8, 31);
 	printf("JD 8/31/12: %f\n", JD2);
 	double J2k = get_jd(2000, 1, 1);
-	s_coord2 sun_pos = celestial(JD2, 37.9232, -122.2937);
+	double n = 0;
+	s_coord2 sun_pos = celestial(JD2, 37.9232, -122.2937, n);
 
 	printf("Radial dist: %f\n", sun_pos.r);
 	printf("Azimuth: %f\n", sun_pos.azimuth);
 	printf("Elevation: %f\n", sun_pos.elevation);
 
+	console_scale(&sun_pos);
+
+	printf("Scaled Azimuth: %f\n", sun_pos.azimuth);
+	printf("Scaled Elevation: %f\n", sun_pos.elevation);
+
 	// sun_pos.r = au_to_km(sun_pos.r);
 
-	point_3d sun_pos_cart = spherical_to_cart(&sun_pos);
+	// point_3d sun_pos_cart = spherical_to_cart(&sun_pos);
 
-	printf("X: %f\n", sun_pos_cart.x);
-	printf("Y: %f\n", sun_pos_cart.y);
-	printf("Z: %f\n", sun_pos_cart.z);
+	// printf("X: %f\n", sun_pos_cart.x);
+	// printf("Y: %f\n", sun_pos_cart.y);
+	// printf("Z: %f\n", sun_pos_cart.z);
+
+	n = 1/60;
+	while(1){
+		break;
+		s_coord2 sun_pos = celestial(JD2, 37.9232, -122.2937, n);
+		console_scale(&sun_pos);
+		double hour = get_local()+n;
+		printf("azimuth: %f", sun_pos.azimuth);
+		printf("\televation: %f", sun_pos.elevation);
+		printf("\thour: %f\n", hour);
+		
+		n+=n;
+
+		if(n > 24*60) n = 1/60;
+		sleep(1);
+	}
 
 
-	// // Initialize ncurses
-	// initscr();
-	// clear();
-	// noecho();
-	// cbreak();
-	// keypad(stdscr, TRUE);
-	// curs_set(0);	
+	// Initialize ncurses
+	initscr();
+	clear();
+	noecho();
+	cbreak();
+	keypad(stdscr, TRUE);
+	curs_set(0);	
 
-	// // test symbol
-	// char main_char = '@';
-	// char ch;
+	// test symbol
+	char main_char = '@';
+	char ch;
 
-	// // Rendering loop
+	// Rendering loop
+	n = 30;
+	int j = 0;
+	double x = 1.0;
+	double y = 1.0;
+	refresh();
+	while(1) {
+		// break;
+		s_coord2 sun_pos = celestial(JD2, 37.9232, -122.2937, n);
+		n+=n;
+		if(n > 24*60) n = 20;
+		console_scale(&sun_pos);
 
-	// draw_line(1,1,20,10, '@');
-	// refresh();
-	// while(1) {
-	// 	ch = getch();
-	// 	if(ch == 'q' || ch == 'Q') {
-	// 		break;
-	// 	}
-	// }
-	// endwin(); // clear ncurses's junk
+		x+=floor(n);
+		y+=floor(n);
+		mvaddch(floor(sun_pos.elevation), floor(sun_pos.azimuth), main_char);
+		// mvaddch(1, floor(sun_pos.azimuth), main_char);
+		// mvaddch(x, y, main_char);
+		// mvaddch(j, j, main_char);
+		j++;
+		// ch = getch();
+		// if(ch == 'q' || ch == 'Q') {
+		// 	break;
+		// }
+		// sleep(1);
+		refresh();
+	}
+	endwin(); // clear ncurses's junk
 }
