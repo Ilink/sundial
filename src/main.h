@@ -26,3 +26,9 @@ typedef struct {
 	double altitude;
 	double r;
 } s_coord;
+
+typedef struct {
+	double azimuth;
+	double r;
+	double elevation;
+} s_coord2;
