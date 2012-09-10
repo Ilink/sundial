@@ -40,27 +40,49 @@ void console_scale(s_coord2* coord){
 	fclose(file);
 }
 
+void scaley(double* x, double* y){
+	struct winsize w;
+	ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
+
+	double x_ratio = (double) w.ws_col / 700.0;
+	double y_ratio = (double) w.ws_row / 360.0;
+
+	double half_width = w.ws_col / 2.0;
+}
+
 graph_info get_graph_info(double jd, double lat, double lng, double precision, double tz){
 	double midpoint;	
 	int n=0;
 	double highest=0;
 	s_coord2 graph;
 	graph_info g;
+	int first = 1;
 
 	FILE* file;
 	file = fopen("graph_info.txt","w+");
 
 	while(1){
-		graph = celestial(jd, lat, lng, n, 4.0, tz);
-		if(graph.elevation > highest){
+		graph = celestial(jd, lat, lng, n, 5.5, tz);
+		if(first){
+			first = 0;
+			highest =  graph.elevation;
+		}
+
+		fprintf(file, "elevation: %f\t", graph.elevation);
+		fprintf(file, "azimuth: %f\n", graph.azimuth);
+
+		if(graph.elevation >= highest){
+			
 			highest = graph.elevation;
 			midpoint = graph.azimuth;
-		} else {
-			g.midpoint = graph.azimuth;
-			fprintf(file, 'midpoint: %f\t', g.midpoint);
+		} else if(graph.elevation > 0){
+			g.midpoint = midpoint;
+			fprintf(file, "midpoint: %f\t", midpoint);
+			fprintf(file, "highest: %f\n", highest);
 			break;
 		}
 		n += precision;
+		// usleep(100);
 	}
 
 	fclose(file);
