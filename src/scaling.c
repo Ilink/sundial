@@ -7,36 +7,42 @@
 #include "scaling.h"
 #include "sun.h"
 
-void console_scale(s_coord2* coord){
+void console_scale(s_coord2* coord, double midpoint){
 	struct winsize w;
 	ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
 
 	// these dont really work too well, they should be better
-	double x_ratio = (double) w.ws_col / 700.0;
+	double x_ratio = (double) w.ws_col / 700.0; // these are named wrong..let's keep it that way
 	double y_ratio = (double) w.ws_row / 360.0;
 
 	double half_width = w.ws_col / 2.0;
 	// double x_offset = half_width - 
 
+	double true_offset = midpoint*y_ratio+half_width;
+	midpoint *= y_ratio;
+	midpoint = true_offset - midpoint;
+
 	// double new_azimuth = abs(w.ws_row - coord->azimuth * y_ratio);
-	double new_azimuth = -1*(coord->azimuth * y_ratio) + floor(w.ws_col/1.4);
-	coord->azimuth *= y_ratio;
+	// double new_azimuth = -1*(coord->azimuth * y_ratio) + floor(w.ws_col/1.4);
+	double new_azimuth = -1*(coord->azimuth * y_ratio) + floor(true_offset);
 	coord->azimuth = new_azimuth;
 
 	// double new_ele = abs(w.ws_col - coord->elevation * x_ratio);
-	double new_ele = -1*(coord->elevation * x_ratio) + floor(w.ws_col/7.5);
-	coord->elevation *= x_ratio;
+	// double new_ele = -1*(coord->elevation * x_ratio) + floor(w.ws_col/7.5);
+	double new_ele = -1*(coord->elevation * x_ratio * 0.9) + floor(w.ws_col/16.0);
 	coord->elevation = new_ele;
 
 	FILE *file; 
 	file = fopen("out.txt","a+");  
-	// fprintf(file,"azi (x): %f\t", new_azimuth); 
-	// fprintf(file,"ele (y): %f\n", new_ele); 
+	fprintf(file,"midpoint (x): %f\t", midpoint); 
+	fprintf(file,"scaled azi (x): %f\t", new_azimuth); 
+	fprintf(file,"scaled ele (y): %f\n", new_ele); 
 	
 	// fprintf(file, "col: %f\n", floor(w.ws_col/5.0));
 
-	// fprintf(file,"col console (x): %i\t", w.ws_col);
-	// fprintf(file, "row console (y): %i\n\n", w.ws_row);
+	fprintf(file,"col console (x): %i\t", w.ws_col);
+	fprintf(file, "row console (y): %i\n\n", w.ws_row);
+
 	fclose(file);
 }
 

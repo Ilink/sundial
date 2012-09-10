@@ -4,6 +4,7 @@
 extern double const PI;
 extern double const jd2k;
 #define printf(fmt, ...) (0)
+// #define fprintf(fmt,...) (0)
 
 typedef struct {
 	int x; 

@@ -89,22 +89,39 @@ void draw_ticks(int x_offset, int y_offset, int lat, int shadow_length){
 	fclose(file);
 }
 
-point_f shadow_point (s_coord2* sun_pos, int shadow_length){
+point_f shadow_point (s_coord2* sun_pos, int shadow_length, double midpoint){
 	double angle = atan2(sun_pos->elevation, sun_pos->azimuth);
 	FILE *file; 
-	file = fopen("out.txt","a+");
+	file = fopen("shadow.txt","a+");
+	
+  
+	point_f p;
+	if(sun_pos->azimuth >= midpoint){
+		angle += PI/2.0;
+		fprintf(file, "over midpoint: %f\t", sun_pos->azimuth);
+		p.x = sin(angle)*(shadow_length+PI/2.0);
+	} else {
+		p.x = sin(angle) * shadow_length;
+	}
+
+	
+	// p.x = sin(-1*angle) * shadow_length;
+	p.y = cos(angle) * shadow_length;
+
+	// p.x = sun_pos->azimuth;
+	// p.y = sun_pos->elevation *-1.0 +49;
+
+	// p.x += 10;
+	// p.y += 10;
+
+	fprintf(file, "sy: %f\t", p.y);
+	fprintf(file, "sx: %f\n", p.x);
+
 	fprintf(file, "ele: %f\t", sun_pos->elevation);
 	fprintf(file, "azi: %f\t", sun_pos->azimuth);
 	fprintf(file, "shadow angle: %f\n", rad_to_deg(angle));
-  
+
 	fclose(file);
-	if(angle > PI/2.0){
-		// angle -= PI/2.0;
-	}
-	
-	point_f p;
-	p.x = sin(angle) * shadow_length;
-	p.y = cos(angle) * shadow_length;
 	return p;
 }
 
@@ -129,7 +146,7 @@ int main(){
 	printf("Azimuth: %f\n", sun_pos.azimuth);
 	printf("Elevation: %f\n", sun_pos.elevation);
 
-	console_scale(&sun_pos);
+	// console_scale(&sun_pos);
 
 	printf("Scaled Azimuth: %f\n", sun_pos.azimuth);
 	printf("Scaled Elevation: %f\n", sun_pos.elevation);
@@ -150,7 +167,7 @@ int main(){
 	while(1){
 		break;
 		s_coord2 sun_pos = celestial(JD2, lat, lng, n, 25, -8.0);
-		console_scale(&sun_pos);
+		// console_scale(&sun_pos);
 		double hour = get_local()+n;
 		printf("azimuth: %f", sun_pos.azimuth);
 		printf("\televation: %f", sun_pos.elevation);
@@ -187,23 +204,29 @@ int main(){
 	file = fopen("out.txt","a+");
 	mvaddch(0, 0, 'o');
 	refresh();
+	sun_pos = celestial(JD2, lat, lng, n, 25, tz);
+	graph_info g = get_graph_info(JD2, lat, lng, 1.0, tz);
+
 	while(1) {
 		// break;
-		s_coord2 sun_pos = celestial(JD2, lat, lng, n, 25, tz);
+		sun_pos = celestial(JD2, lat, lng, n, 25, tz);
 		n+=increment;
 		if(n > 24*60) n = 0.01;
 		// graph_info g = get_graph_info(JD2, lat, lng, 1.0, tz);
 		// fprintf(file, 'highest: %f\t', );
-		console_scale(&sun_pos);
+		console_scale(&sun_pos, g.midpoint);
 
 
-		point_f spoint = shadow_point(&sun_pos, 1);
+		point_f spoint = shadow_point(&sun_pos, 1, 81.0);
 
-		int x = ceil(spoint.x * 30+20);
-		int y = ceil(spoint.y * 30);
+		// int x = ceil(spoint.x);
+		// int y = ceil(spoint.y);
+
+		int x = ceil(spoint.x*30+20);
+		int y = ceil(spoint.y*30);
 		
-		fprintf(file, "sc shadow x: %i\t", x);
-		fprintf(file, "sc shadow y: %i\n", y);
+		fprintf(file, "sc shadow x: %i\t", y);
+		fprintf(file, "sc shadow y: %i\n", x);
 		
 
 		// draw_line(10, 10, ceil(spoint.y*20.0+30), ceil(spoint.x*20.0+30), 'o');
@@ -213,7 +236,7 @@ int main(){
 
 		j++;
 
-		usleep(2000);
+		// usleep(2000);
 		refresh();
 	}
 	fclose(file);
