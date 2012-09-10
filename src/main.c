@@ -6,13 +6,10 @@
 #include <pthread.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
+#include "types.h"
+#include "sun.h"
+#include "scaling.h"
 #include "main.h"
-
-#define printf(fmt, ...) (0)
-
-
-double const PI = atan(1)*4;
-double jd2k = 2451545.0;
 
 void draw_line(int x0, int y0, int x1, int y1, char render_char){
 	int dx = abs(x1-x0);
@@ -39,322 +36,80 @@ void draw_line(int x0, int y0, int x1, int y1, char render_char){
 	}
 }
 
-// returns hour + fraction
-double get_ut(){
-	time_t rawtime;
-	struct tm *ptm;
-
-	time(&rawtime);
-	ptm = gmtime(&rawtime);
-
-	double sec = ptm->tm_sec / 3600.0;
-	double min = ptm->tm_min / 60.0;
-	double time = ptm->tm_hour + sec + min;
-
-	return time;
-}
-
-double get_local(){
-	time_t rawtime;
-	struct tm *ptm;
-
-	time(&rawtime);
-	ptm = localtime(&rawtime);
-
-	double sec = ptm->tm_sec;
-	double min = ptm->tm_min;
-	double hour = ptm->tm_hour;
-
-	hour-=12;
-
-	double time = hour*60.0 + min + sec/60.0;
-
-	printf("seconds: %f\n", sec);
-	printf("minutes: %f\n", min);
-	printf("hours: %f\n", hour);
-
-	return time;
-}
-
-double deg_to_rad(double x){
-	return PI * x / 180.0;
-}
-
-double rad_to_deg(double x){
-	return 180.0 * x / PI;
-}
-
-point_3d spherical_to_cart(s_coord2* s_coord){
-	point_3d point;
-	double sin_elevation = sin(s_coord->elevation);
-	point.x = s_coord->r*sin_elevation*cos(s_coord->azimuth);
-	point.y = s_coord->r*sin_elevation*sin(s_coord->azimuth);
-	point.z = s_coord->r*cos(s_coord->elevation);
-	return point;
-}
-
-double au_to_km(double au){
-	return au*149598000.0;
-}
-
-// uses UT, not local time
-double get_jd(int year, int month, int day){
-	double UT;
-	UT = get_ut();
-
-	time_t t = time(NULL);
-	struct tm *now = localtime(&t);
-	int day_of_year = now->tm_yday;
-
-	int a = floor(year/100.0);
-	int b = 2 - a + floor(a/4.0);
-	return floor(365.25*(year + 4716))+ floor(30.6001*(month+1))+day+b-1524.5;
-}
-
-int int_part(double x){
-	return abs(x)*((int)x >> 31) | (((0 - (int)x) >> 31) & 1);
-}
-
-double range_deg(double x){
-	double b = x / 360;
-	double a = 360 * (b-int_part(b));
-	if(a < 0) a += 360;
-	return a;
-}
-
-// returns degrees
-double calc_obliq_corr(double t){
-	double seconds = 21.448 - t*(46.8150 + t*(0.00059 - t*(0.001813)));
-	double e0 = 23.0 + (26.0 + (seconds/60.0))/60.0;
-	double omega = 125.04 - 1934.136 * t;
-	return e0 + 0.00256 * cos(deg_to_rad(omega));
-}
-
-// returns degrees
-double calc_sun_center(double t) {
-	double m = 357.52911 + t * (35999.05029 - 0.0001537 * t);
-	double mrad = deg_to_rad(m);
-	double sinm = sin(mrad);
-	double sin2m = sin(mrad+mrad);
-	double sin3m = sin(mrad+mrad+mrad);
-	return sinm * (1.914602 - t * (0.004817 + 0.000014 * t)) + sin2m * (0.019993 - 0.000101 * t) + sin3m * 0.000289;
-}
-
-// returns degrees
-double calc_mean_lng_sun(double t){
-	double L0 = 280.46646 + t * (36000.76983 + t*(0.0003032));
-	while(L0 > 360.0) L0 -= 360.0;
-	while(L0 < 0.0) L0 += 360.0;
-	return L0;
-}
-
-// returns degrees
-double calc_sun_app_lng(double t){
-	double l0 = calc_mean_lng_sun(t);
-	double c = calc_sun_center(t);
-	double o = l0 + c;
-	double omega = 125.04 - 1934.136 * t;
-	double lambda = o - 0.00569 - 0.00478 * sin(deg_to_rad(omega));
-	printf("app_lng l0: %f\n", l0);
-	printf("app_lng c: %f\n", c);
-	printf("app_lng o: %f\n", o);
-	printf("app_lng omega: %f\n", omega);
-	return lambda;
-}
-
-double calc_earth_ecc(double t){
-	return 0.016708634 - t * (0.000042037 + 0.0000001267 * t);
-}
-
-void console_scale(s_coord2* coord){
+scale_factor get_scale(){
 	struct winsize w;
 	ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
-
-	// these dont really work too well, they should be better
 	double x_ratio = (double) w.ws_col / 360.0;
 	double y_ratio = (double) w.ws_row / 360.0;
 
-	// double new_azimuth = abs(w.ws_row - coord->azimuth * y_ratio);
-	double new_azimuth = -1*(coord->azimuth * y_ratio)+50;
-	coord->azimuth *= y_ratio;
-	coord->azimuth = new_azimuth;
-
-	// double new_ele = abs(w.ws_col - coord->elevation * x_ratio);
-	double new_ele = -1*(coord->elevation * x_ratio)+30;
-	coord->elevation *= x_ratio;
-	coord->elevation = new_ele;
-
-	// FILE *file; 
-	// file = fopen("out.txt","a+");  
-	// fprintf(file,"azi (x): %f\t", new_azimuth); 
-	// fprintf(file,"ele (y): %f\n", new_ele); 
-	// fprintf(file,"col console (x): %i\t", w.ws_col);
-	// fprintf(file, "row console (y): %i\n\n", w.ws_row);
-	// fclose(file);
+	scale_factor f;
+	f.x = x_ratio / 1.4;
+	f.y = y_ratio / 1.4;
+	return f;
 }
 
-// returns AUs
-double calc_sun_rad_vector(double t) {
-	double l0 = calc_mean_lng_sun(t);
-	double c = calc_sun_center(t);
-	double v = l0 + c;
-	double e = calc_earth_ecc(t);
-	return (1.000001018 * (1 - e * e)) / (1 + e * cos(deg_to_rad(v)));
+point_f tick_point(double hla, int shadow_length){
+	point_f pos;
+	pos.y = 20+sin(hla)*shadow_length;
+	pos.x = cos(hla)*shadow_length;
+
+	return pos;
 }
 
-double calc_mean_anomaly_sun(double t){
-	return 357.52911 + t * (35999.05029 - 0.0001537 * t);
-}
+void draw_ticks(int x_offset, int y_offset, int lat, int shadow_length){
+	FILE *file;
+	file = fopen("out.txt","a+");
+	
 
-// returns degrees
-double calc_declination(double t){
-	double e = calc_obliq_corr(t); //todo check me
-	double lambda = calc_sun_app_lng(t); // check meeeeee
+	int hours[] = {6,7,8,9,10,11,12,13,14,15,16,17,18};
 
-	printf("decl e: %f\n", e);
-	printf("decl lambda: %f\n", lambda);
+	int* iter;
+	int size = sizeof(hours) / sizeof(int);
 
-	double sint = sin(deg_to_rad(e)) * sin(deg_to_rad(lambda));
-	double theta = rad_to_deg(asin(sint));
-	return theta;
+	scale_factor f = get_scale();
 
-	// return rad_to_deg(asin(sin(deg_to_rad(e)) * sin(deg_to_rad(lambda))));
-}
+	for(iter = &hours; iter < hours+size; ++iter){
+		// fprintf(file,"%i\t", iter); 
+		// fprintf(file,"%i\n", *iter);
+		double ha = get_ha(*iter);
+		double hla = get_hla(lat, ha);
+		double xform = hla * 180 / PI + 90;
+		point_f tick = tick_point(hla, 10);
+		// fprintf(file,"ha: %f\t", ha);
+		// fprintf(file,"hla: %f\t", hla);
+		// fprintf(file,"xform: %f\t", xform);
+		// fprintf(file, "hour: %i\t", *iter);
+		// fprintf(file, "x: %f\t", tick.x);
+		// fprintf(file, "y: %f\t", tick.y);
+		// fprintf(file, "x: %f\t", f.x);
+		// fprintf(file, "y: %f\n", f.y);
 
-double calc_eq_time(double t){
-	double epsilon = calc_obliq_corr(t);
-	printf("epsilon: %f\n", epsilon);
-	double l = calc_mean_lng_sun(t);
-	printf("l: %f\n", l);
-	double e = 0.016708634 - t * (0.000042037 + 0.0000001267 * t);
-	printf("e: %f\n", e);
-	double m = calc_mean_anomaly_sun(t);
-	printf("m: %f\n", m);
-
-
-	double y = tan(deg_to_rad(epsilon)/2.0);
-	y *= y;
-
-	double test = 2.0 * deg_to_rad(l);
-	double sin2l0 = sin(test);
-	// double sin2l0 = sin(2.0 * deg_to_rad(l));
-	double sinm   = sin(deg_to_rad(m));
-	double cos2l0 = cos(2.0 * deg_to_rad(l));
-	double sin4l0 = sin(4.0 * deg_to_rad(l));
-	double sin2m  = sin(2.0 * deg_to_rad(m));
-
-	printf("sin2l0: %f\n", sin2l0);
-	printf("sinm: %f\n", sinm);
-	printf("cos2l0: %f\n", cos2l0);
-	printf("sin4l0: %f\n", sin4l0);
-	printf("sin2m: %f\n", sin2m);
-
-	sin2l0 = -0.5486700881092892;
-	sinm = -0.8678243339510023;
-	cos2l0 = 0.8360389550817263;
-	sin4l0 = -0.9174191342949778;
-	sin2m = 0.8623937246406765;
-
-	double Etime = y * sin2l0 - 2.0 * e * sinm + 4.0 * e * y * sinm * cos2l0 - 0.5 * y * y * sin4l0 - 1.25 * e * e * sin2m;
-	return rad_to_deg(Etime)*4.0; // in minutes of time
-}
-
-s_coord2 celestial(double jd, double lat, double lng, double increment){
-	double hour = get_ut();
-	hour = get_local()+increment;
-	// hour = 12;
-	printf("Hour: %f\n", hour);
-	double tz = -8.0; // todo: un-hardcode
-
-	double j2k = get_jd(2000, 1, 1);
-	double time;
-	time = jd + hour/1440.0 - tz/24.0;
-	time = (time - 2451545.0)/36525.0;
-	printf("time: %f\n", time);
-
-	double eqtime = calc_eq_time(time);
-	printf("eqtime: %f\n", eqtime);
-
-	double delta = calc_declination(time);
-	printf("delta (decl): %f\n", delta);
-	double solar_time_fix = eqtime + 4.0 * lng - 60.0 * tz;
-	// double true_solar_time = hour + (eqtime + 4.0 * lng - 60.0 * tz);
-	double true_solar_time = hour + solar_time_fix;
-	// printf("solar_time_fix: %f\n", solar_time_fix);
-	// printf("uncorr true solar time: %f\n", true_solar_time);
-	while(true_solar_time > 1440) true_solar_time -= 1440.0;
-	double ha = true_solar_time / 4.0 - 180.0;
-	if(ha < -180) ha += 360.0;
-	printf("true solar time: %f\n", true_solar_time);
-
-	printf("ha: %f\n", ha);
-
-	double r = calc_sun_rad_vector(time);
-	double ha_rad = deg_to_rad(ha);
-	printf("ha_rad: %f\n", ha_rad);
-	double cos_zenith = sin(deg_to_rad(lat)) * sin(deg_to_rad(delta)) + cos(deg_to_rad(lat)) * cos(deg_to_rad(delta)) * cos(ha_rad);
-
-	printf("(pre) cos zenith: %f\n", cos_zenith);
-
-	if(cos_zenith > 1.0) cos_zenith = 1.0;
-	else if (cos_zenith < -1.0) cos_zenith = -1.0;
-	double zenith = rad_to_deg(acos(cos_zenith));
-	printf("cos zenith: %f\n", cos_zenith);
-	printf("zenith: %f\n", zenith);
-
-	double azimuth_denom = cos(deg_to_rad(lat))*sin(deg_to_rad(zenith));
-	double azimuth;
-	if(fabs(azimuth_denom) > 0.001){
-		printf("%s\n", "azi denon great than 0.001");
-		double azimuth_rad = ((sin(deg_to_rad(lat)) * cos(deg_to_rad(zenith))) - sin(deg_to_rad(delta))) / azimuth_denom;
-		if(fabs(azimuth_rad)>1.0) {
-			if(azimuth_rad < 0.0) azimuth_rad = -1.0;
-			else azimuth_rad = 1.0;
-		}
-		azimuth = 180.0 - rad_to_deg(acos(azimuth_rad));
-		printf("azrad: %f\n", azimuth_rad);
-		if(ha > 0.0) azimuth = -azimuth;
-	} else {
-		printf("%s\n", "azi denon less than 0.001");
-		if(lat > 0.0) azimuth = 180.0;
-		else azimuth = 0.0;
+		mvaddch(x_offset+ceil(tick.x*f.x*3), y_offset+ceil(tick.y*f.y*10), '*');
 	}
-	if (azimuth < 0) azimuth += 360.0;
+	fclose(file);
+}
 
-	printf("azimuth denom %f\n", azimuth_denom);
-
-	double ref_corr;
-	double eo_ele = 90.0 - zenith;
-	if(eo_ele > 85.0){
-		ref_corr = 0.0;
-	} else {
-		double te = tan(deg_to_rad(eo_ele));
-		if(eo_ele > 5.0) {
-			ref_corr = 58.1 / te - 0.07 / (te*te*te) + 0.000086 / (te*te*te*te*te);
-		} else if(eo_ele > -0.575) {
-			ref_corr = 1735.0 + eo_ele * (-518.2 + eo_ele * (103.4 + eo_ele * (-12.79 + eo_ele * 0.711)));
-		} else {
-			ref_corr = -20.774 / te;
-		}
-		ref_corr /= 3600.0;
+point_f shadow_point (s_coord2* sun_pos, int shadow_length){
+	double angle = atan2(sun_pos->elevation, sun_pos->azimuth);
+	FILE *file; 
+	file = fopen("out.txt","a+");
+	fprintf(file, "ele: %f\t", sun_pos->elevation);
+	fprintf(file, "azi: %f\t", sun_pos->azimuth);
+	fprintf(file, "shadow angle: %f\n", rad_to_deg(angle));
+  
+	fclose(file);
+	if(angle > PI/2.0){
+		// angle -= PI/2.0;
 	}
-	printf("zenith %f\n", zenith);
-	double solar_zenith = zenith - ref_corr;
-	printf("solar zenith %f\n", solar_zenith);
-	printf("Refraction correction%f\n", ref_corr);
-
-	s_coord2 coord;
-	printf("Azimuth: %f\n", azimuth);
-	coord.azimuth = azimuth;
-	coord.r = r;
-	double el = floor((90.0-solar_zenith)*100+0.5)/100.0;
-	coord.elevation = el;
-
-	return coord;
+	
+	point_f p;
+	p.x = sin(angle) * shadow_length;
+	p.y = cos(angle) * shadow_length;
+	return p;
 }
 
 int main(){
-	
+	double lat = 37.9232; double lng = -122.2937; double tz = -8.0;
 	remove("out.txt");
 	point a;
 	a.x = 5;
@@ -368,7 +123,7 @@ int main(){
 	printf("JD 8/31/12: %f\n", JD2);
 	double J2k = get_jd(2000, 1, 1);
 	double n = 0;
-	s_coord2 sun_pos = celestial(JD2, 37.9232, -122.2937, n);
+	s_coord2 sun_pos = celestial(JD2, 37.9232, -122.2937, n, 25, -8.0);
 
 	printf("Radial dist: %f\n", sun_pos.r);
 	printf("Azimuth: %f\n", sun_pos.azimuth);
@@ -378,6 +133,10 @@ int main(){
 
 	printf("Scaled Azimuth: %f\n", sun_pos.azimuth);
 	printf("Scaled Elevation: %f\n", sun_pos.elevation);
+
+	// test area
+	// draw_ticks(0,0, lat, 1);
+	// end
 
 	// sun_pos.r = au_to_km(sun_pos.r);
 
@@ -390,7 +149,7 @@ int main(){
 	n = 1/60;
 	while(1){
 		break;
-		s_coord2 sun_pos = celestial(JD2, 37.9232, -122.2937, n);
+		s_coord2 sun_pos = celestial(JD2, lat, lng, n, 25, -8.0);
 		console_scale(&sun_pos);
 		double hour = get_local()+n;
 		printf("azimuth: %f", sun_pos.azimuth);
@@ -417,32 +176,46 @@ int main(){
 	char ch;
 
 	// Rendering loop
-	n = 30;
+	n = 0;
+	double increment = 1;
 	int j = 0;
 	double x = 1.0;
 	double y = 1.0;
+	draw_ticks(0,0, lat, 1);
+
+	FILE* file;
+	file = fopen("out.txt","a+");
+	mvaddch(0, 0, 'o');
 	refresh();
 	while(1) {
 		// break;
-		s_coord2 sun_pos = celestial(JD2, 37.9232, -122.2937, n);
-		n+=n;
-		if(n > 24*60) n = 20;
+		s_coord2 sun_pos = celestial(JD2, lat, lng, n, 25, tz);
+		n+=increment;
+		if(n > 24*60) n = 0.01;
+		// graph_info g = get_graph_info(JD2, lat, lng, 1.0, tz);
+		// fprintf(file, 'highest: %f\t', );
 		console_scale(&sun_pos);
 
-		x+=floor(n);
-		y+=floor(n);
+
+		point_f spoint = shadow_point(&sun_pos, 1);
+
+		int x = ceil(spoint.x * 30+20);
+		int y = ceil(spoint.y * 30);
+		
+		fprintf(file, "sc shadow x: %i\t", x);
+		fprintf(file, "sc shadow y: %i\n", y);
+		
+
+		// draw_line(10, 10, ceil(spoint.y*20.0+30), ceil(spoint.x*20.0+30), 'o');
+
+		mvaddch(y,x, 'o');
 		mvaddch(floor(sun_pos.elevation), floor(sun_pos.azimuth), main_char);
-		// mvaddch(floor(sun_pos.azimuth), floor(sun_pos.elevation), main_char);
-		// mvaddch(1, floor(sun_pos.azimuth), main_char);
-		// mvaddch(x, y, main_char);
-		// mvaddch(j, j, main_char);
+
 		j++;
-		// ch = getch();
-		// if(ch == 'q' || ch == 'Q') {
-		// 	break;
-		// }
-		// sleep(1);
+
+		usleep(2000);
 		refresh();
 	}
+	fclose(file);
 	endwin(); // clear ncurses's junk
 }
