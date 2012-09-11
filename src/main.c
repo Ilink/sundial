@@ -173,15 +173,15 @@ point_f shadow_point2(s_coord2* sun_pos, int shadow_length, double midpoint, dou
 	FILE *file; 
 	file = fopen("shadow2.txt","a+");
 
-	shadow_length = 20;
+	// shadow_length = 10; // this should change based upon size of window
 
 	// convert to relative coordinates
 	double rel_x = sun_pos->azimuth - midpoint;
 	double rel_y = sun_pos->elevation - y_midpoint;
 
 	double angle = atan2(rel_y,rel_x);
-	double x = cos(angle) * shadow_length;
-	double y = sin(angle) * shadow_length;
+	double x = cos(-1*angle) * shadow_length;
+	double y = sin(-1*angle) * shadow_length;
 
 	fprintf(file, "y: %f\t", y);
 	fprintf(file, "x: %f\t", x);
@@ -311,11 +311,14 @@ int main(){
 		fprintf(file, "midpoint x: %f\t", 86.5);
 		double test = 86.500000;
 		// point_f spoint = shadow_point(&sun_pos, 1, s.midpoint);
-		point_f spoint = shadow_point2(&sun_pos, 1, s.midpoint, y_midpoint);
+
+		double shadow_length = w.ws_row/3.3;
+		point_f spoint = shadow_point2(&sun_pos, shadow_length, s.midpoint, y_midpoint);
 		
 
-		int x = ceil(spoint.y+4);
-		int y = ceil(spoint.x+4);
+		// int x = ceil(spoint.y+4);
+		int x = ceil(spoint.y);
+		int y = ceil(spoint.x+s.midpoint-2);
 
 		// int x = ceil(spoint.x + 10);
 		// int y = ceil(spoint.y + half_width/2.0);
@@ -328,7 +331,7 @@ int main(){
 		// draw_line(70, 25, 20, 0, 'x');
 
 
-		mvaddch(y,x, 'o');
+		mvaddch(x,y, 'o');
 		mvaddch(floor(sun_pos.elevation), floor(sun_pos.azimuth), main_char);
 
 		j++;
