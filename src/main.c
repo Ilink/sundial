@@ -69,7 +69,7 @@ double get_ha(int hour){
 	return (hour - 12) * 15;
 }
 
-void draw_ticks(int x_offset, int y_offset, int lat, int shadow_length){
+int draw_ticks(int x_offset, int y_offset, int lat, int a){
 	FILE *file;
 	file = fopen("ticks.txt","a+");
 
@@ -79,6 +79,11 @@ void draw_ticks(int x_offset, int y_offset, int lat, int shadow_length){
 	int size = sizeof(hours) / sizeof(int);
 
 	scale_factor f = get_scale();
+	int first=0; int mid=0;
+
+	struct winsize w;
+	ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
+	double half_width = w.ws_col / 2.0;
 
 	for(iter = &hours; iter < hours+size; ++iter){
 		// fprintf(file,"%i\t", iter); 
@@ -95,19 +100,34 @@ void draw_ticks(int x_offset, int y_offset, int lat, int shadow_length){
 		fprintf(file, "y: %f\t\t", tick.y);
 		fprintf(file, "x: %f\t\t", f.x);
 		fprintf(file, "y: %f\t\t", f.y);
+		fprintf(file, "offset: %i\t\t", x_offset);
 
-		int x = x_offset+ceil(tick.x*f.x*3)+10;
-		int y = y_offset+ceil(tick.y*f.y*10);
+		int x = x_offset+12+ceil(tick.x*f.x*3);
+		int y = half_width-(y_offset*2.25)+ceil(tick.y*f.y*10);
 		fprintf(file, "scaled x: %i\t", x);
 		fprintf(file, "scaled y: %i\n", y);
 
-		mvaddch(y,x, '*');
+		if(a){
+			if(*iter == 6){
+				first = y;
+			}
+			if(*iter == 12){
+				mid = y;
+			}
+			mid = abs(mid - first);
+		}
+
+		if(!a){
+			mvaddch(x,y, '*');
+		}
 	}
+
 	fclose(file);
+	return mid;
 }
 
 point_f shadow_point (s_coord2* sun_pos, int shadow_length, double midpoint){
-	double angle = atan2(sun_pos->elevation, sun_pos->azimuth) *1.5;
+	double angle = atan2(sun_pos->elevation, sun_pos->azimuth) *1.7;
 	FILE *file; 
 	file = fopen("shadow.txt","a+");
 	shadow_length = 3;
@@ -130,7 +150,7 @@ point_f shadow_point (s_coord2* sun_pos, int shadow_length, double midpoint){
 	if(sun_pos->azimuth >= midpoint){
 		p.x = 10 * (p.x-0.01)+10;
 	} else {
-		p.x = 10 * (p.x-0.01)+9;
+		p.x = 10 * (p.x-0.01)+8;
 	}
 	p.y = 10 * (p.y-2.8) / 0.15;
 
@@ -224,10 +244,15 @@ int main(){
 	int j = 0;
 	double x = 1.0;
 	double y = 1.0;
-	draw_ticks(0,0, lat, 1);
 
 	FILE* file;
 	file = fopen("out.txt","a+");
+
+	int offset_x = draw_ticks(0,0, lat, 1);
+	draw_ticks(offset_x,offset_x, lat, 0);
+	fprintf(file, "offset from first: %i\t", offset_x);
+
+	
 	mvaddch(0, 0, 'o');
 	refresh();
 	sun_pos = celestial(JD2, lat, lng, n, 25, tz);
@@ -245,6 +270,7 @@ int main(){
 		scale_stuff s;
 		s = console_scale(&sun_pos, g.midpoint);
 
+
 		fprintf(file, "midpoint (weird) x: %f\t", s.midpoint);
 		fprintf(file, "midpoint x: %f\t", 86.5);
 		double test = 86.500000;
@@ -260,8 +286,8 @@ int main(){
 		fprintf(file, "sc shadow y: %i\n", x);
 		
 
-		draw_line(70, 25, ceil(spoint.y), ceil(spoint.x), 'x');
-		// draw_line(10, 10, 20, 20, 'X');
+		// draw_line(70, 25, ceil(spoint.x), ceil(spoint.y), 'x'); // this one is right!
+		// draw_line(70, 25, 20, 0, 'x');
 
 
 		mvaddch(y,x, 'o');
@@ -269,7 +295,7 @@ int main(){
 
 		j++;
 
-		usleep(8000);
+		// usleep(5000);
 		refresh();
 	}
 	fclose(file);
