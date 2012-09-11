@@ -50,4 +50,8 @@ typedef struct {
 	double y;
 } scale_factor;
 
+typedef struct{
+	double midpoint;
+} scale_stuff;
+
 #endif

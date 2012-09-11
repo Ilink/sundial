@@ -240,10 +240,15 @@ int main(){
 		if(n > 24*60) n = 0.01;
 		// graph_info g = get_graph_info(JD2, lat, lng, 1.0, tz);
 		// fprintf(file, 'highest: %f\t', );
-		console_scale(&sun_pos, g.midpoint);
+		// console_scale(&sun_pos, g.midpoint);
+		double midpoint = g.midpoint;
+		scale_stuff s;
+		s = console_scale(&sun_pos, g.midpoint);
 
-
-		point_f spoint = shadow_point(&sun_pos, 1, 86.5);
+		fprintf(file, "midpoint (weird) x: %f\t", s.midpoint);
+		fprintf(file, "midpoint x: %f\t", 86.5);
+		double test = 86.500000;
+		point_f spoint = shadow_point(&sun_pos, 1, s.midpoint);
 
 		// int x = ceil(spoint.x);
 		// int y = ceil(spoint.y);
@@ -255,14 +260,16 @@ int main(){
 		fprintf(file, "sc shadow y: %i\n", x);
 		
 
-		// draw_line(10, 10, ceil(spoint.y*20.0+30), ceil(spoint.x*20.0+30), 'o');
+		draw_line(70, 25, ceil(spoint.y), ceil(spoint.x), 'x');
+		// draw_line(10, 10, 20, 20, 'X');
+
 
 		mvaddch(y,x, 'o');
 		mvaddch(floor(sun_pos.elevation), floor(sun_pos.azimuth), main_char);
 
 		j++;
 
-		// usleep(8000);
+		usleep(8000);
 		refresh();
 	}
 	fclose(file);

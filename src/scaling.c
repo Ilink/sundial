@@ -7,7 +7,7 @@
 #include "scaling.h"
 #include "sun.h"
 
-void console_scale(s_coord2* coord, double midpoint){
+scale_stuff console_scale(s_coord2* coord, double midpoint){
 	struct winsize w;
 	ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
 
@@ -19,8 +19,9 @@ void console_scale(s_coord2* coord, double midpoint){
 	// double x_offset = half_width - 
 
 	double true_offset = midpoint*y_ratio+half_width;
-	midpoint = true_offset - (y_ratio * midpoint);
+	// midpoint = true_offset - (y_ratio * midpoint);
 	midpoint = half_width;
+	// g->midpoint = half_width;
 
 	// double new_azimuth = abs(w.ws_row - coord->azimuth * y_ratio);
 	// double new_azimuth = -1*(coord->azimuth * y_ratio) + floor(w.ws_col/1.4);
@@ -44,6 +45,9 @@ void console_scale(s_coord2* coord, double midpoint){
 	fprintf(file, "row console (y): %i\n\n", w.ws_row);
 
 	fclose(file);
+	scale_stuff s;
+	s.midpoint = midpoint;
+	return s;
 }
 
 void scaley(double* x, double* y){
