@@ -93,13 +93,14 @@ point_f shadow_point (s_coord2* sun_pos, int shadow_length, double midpoint){
 	double angle = atan2(sun_pos->elevation, sun_pos->azimuth);
 	FILE *file; 
 	file = fopen("shadow.txt","a+");
-	
+	shadow_length = 3;
   
 	point_f p;
 	if(sun_pos->azimuth >= midpoint){
-		angle += PI/2.0;
-		fprintf(file, "over midpoint: %f\t", sun_pos->azimuth);
-		p.x = sin(angle)*(shadow_length+PI/2.0);
+		// angle += PI/2.0;
+		// fprintf(file, "over midpoint: %f\t", sun_pos->azimuth);
+		// p.x = sin(angle)*(shadow_length+PI/2.0);
+		p.x = sin(-1*angle) * shadow_length;
 	} else {
 		p.x = sin(angle) * shadow_length;
 	}
@@ -108,18 +109,21 @@ point_f shadow_point (s_coord2* sun_pos, int shadow_length, double midpoint){
 	// p.x = sin(-1*angle) * shadow_length;
 	p.y = cos(angle) * shadow_length;
 
+	if(sun_pos->azimuth >= midpoint){
+		p.x = 10 * (p.x-0.01)+10;
+	} else {
+		p.x = 10 * (p.x-0.01)+9;
+	}
+	p.y = 10 * (p.y-2.8) / 0.15;
+
+
 	// p.x = sun_pos->azimuth;
 	// p.y = sun_pos->elevation *-1.0 +49;
 
-	// p.x += 10;
-	// p.y += 10;
-
-	fprintf(file, "sy: %f\t", p.y);
-	fprintf(file, "sx: %f\n", p.x);
-
-	fprintf(file, "ele: %f\t", sun_pos->elevation);
-	fprintf(file, "azi: %f\t", sun_pos->azimuth);
-	fprintf(file, "shadow angle: %f\n", rad_to_deg(angle));
+	fprintf(file, "s.angle: %f\t", (180.0 * angle) / PI);
+	fprintf(file, "x: %f\t", sun_pos->azimuth);
+	fprintf(file, "s.y: %f\t", p.y);
+	fprintf(file, "s.x: %f\n", p.x);
 
 	fclose(file);
 	return p;
@@ -128,6 +132,8 @@ point_f shadow_point (s_coord2* sun_pos, int shadow_length, double midpoint){
 int main(){
 	double lat = 37.9232; double lng = -122.2937; double tz = -8.0;
 	remove("out.txt");
+	remove("shadow.txt");
+	remove("scaling.txt");
 	point a;
 	a.x = 5;
 	a.y = 5;
@@ -217,13 +223,13 @@ int main(){
 		console_scale(&sun_pos, g.midpoint);
 
 
-		point_f spoint = shadow_point(&sun_pos, 1, 81.0);
+		point_f spoint = shadow_point(&sun_pos, 1, 86.5);
 
 		// int x = ceil(spoint.x);
 		// int y = ceil(spoint.y);
 
-		int x = ceil(spoint.x*30+20);
-		int y = ceil(spoint.y*30);
+		int x = ceil(spoint.x);
+		int y = ceil(spoint.y);
 		
 		fprintf(file, "sc shadow x: %i\t", y);
 		fprintf(file, "sc shadow y: %i\n", x);
@@ -236,7 +242,7 @@ int main(){
 
 		j++;
 
-		// usleep(2000);
+		usleep(8000);
 		refresh();
 	}
 	fclose(file);

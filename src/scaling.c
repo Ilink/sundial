@@ -19,8 +19,8 @@ void console_scale(s_coord2* coord, double midpoint){
 	// double x_offset = half_width - 
 
 	double true_offset = midpoint*y_ratio+half_width;
-	midpoint *= y_ratio;
-	midpoint = true_offset - midpoint;
+	midpoint = true_offset - (y_ratio * midpoint);
+	midpoint = half_width;
 
 	// double new_azimuth = abs(w.ws_row - coord->azimuth * y_ratio);
 	// double new_azimuth = -1*(coord->azimuth * y_ratio) + floor(w.ws_col/1.4);
