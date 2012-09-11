@@ -172,16 +172,27 @@ point_f shadow_point (s_coord2* sun_pos, int shadow_length, double midpoint){
 point_f shadow_point2(s_coord2* sun_pos, int shadow_length, double midpoint, double y_midpoint){
 	FILE *file; 
 	file = fopen("shadow2.txt","a+");
-	// convert to relative coordinates
-	double x = sun_pos->azimuth - midpoint;
-	double y = sun_pos->elevation - y_midpoint;
 
-	double angle = atan2(y,x);
-	fprintf(file, "y: %f\t", angle);
-	fprintf(file, "x: %f\t", angle);
+	shadow_length = 20;
+
+	// convert to relative coordinates
+	double rel_x = sun_pos->azimuth - midpoint;
+	double rel_y = sun_pos->elevation - y_midpoint;
+
+	double angle = atan2(rel_y,rel_x);
+	double x = cos(angle) * shadow_length;
+	double y = sin(angle) * shadow_length;
+
+	fprintf(file, "y: %f\t", y);
+	fprintf(file, "x: %f\t", x);
+	fprintf(file, "angle (deg): %f\t", angle* (180/PI));
 	fprintf(file, "angle (rad): %f\n", angle);
 
+	point_f p;
+	p.x = x;
+	p.y = y;
 	fclose(file);
+	return p;
 }
 
 int main(){
@@ -299,12 +310,12 @@ int main(){
 		fprintf(file, "midpoint (weird) x: %f\t", s.midpoint);
 		fprintf(file, "midpoint x: %f\t", 86.5);
 		double test = 86.500000;
-		point_f spoint = shadow_point(&sun_pos, 1, s.midpoint);
-		spoint = shadow_point2(&sun_pos, 1, s.midpoint, y_midpoint);
+		// point_f spoint = shadow_point(&sun_pos, 1, s.midpoint);
+		point_f spoint = shadow_point2(&sun_pos, 1, s.midpoint, y_midpoint);
 		
 
-		int x = ceil(spoint.y);
-		int y = ceil(spoint.x);
+		int x = ceil(spoint.y+4);
+		int y = ceil(spoint.x+4);
 
 		// int x = ceil(spoint.x + 10);
 		// int y = ceil(spoint.y + half_width/2.0);
