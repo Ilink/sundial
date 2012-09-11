@@ -127,7 +127,8 @@ int draw_ticks(int x_offset, int y_offset, int lat, int a){
 }
 
 point_f shadow_point (s_coord2* sun_pos, int shadow_length, double midpoint){
-	double angle = atan2(sun_pos->elevation, sun_pos->azimuth) *1.7;
+
+	double angle = atan2(sun_pos->elevation, sun_pos->azimuth) * 1.7;
 	FILE *file; 
 	file = fopen("shadow.txt","a+");
 	shadow_length = 3;
@@ -168,10 +169,26 @@ point_f shadow_point (s_coord2* sun_pos, int shadow_length, double midpoint){
 	return p;
 }
 
+point_f shadow_point2(s_coord2* sun_pos, int shadow_length, double midpoint, double y_midpoint){
+	FILE *file; 
+	file = fopen("shadow2.txt","a+");
+	// convert to relative coordinates
+	double x = sun_pos->azimuth - midpoint;
+	double y = sun_pos->elevation - y_midpoint;
+
+	double angle = atan2(y,x);
+	fprintf(file, "y: %f\t", angle);
+	fprintf(file, "x: %f\t", angle);
+	fprintf(file, "angle (rad): %f\n", angle);
+
+	fclose(file);
+}
+
 int main(){
 	double lat = 37.9232; double lng = -122.2937; double tz = -8.0;
 	remove("out.txt");
 	remove("shadow.txt");
+	remove("shadow2.txt");
 	remove("scaling.txt");
 	remove("ticks.txt");
 	point a;
@@ -222,7 +239,7 @@ int main(){
 		n += n;
 
 		if(n > 24*60) n = 1/60;
-		sleep(1);
+		// sleep(1);
 	}
 
 
@@ -260,6 +277,14 @@ int main(){
 
 	while(1) {
 		// break;
+		struct winsize w;
+		ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
+
+		double x_ratio = (double) w.ws_col / 700.0; // these are named wrong..let's keep it that way
+		double y_ratio = (double) w.ws_row / 360.0;
+		double half_width = w.ws_col / 2.0;
+		double y_midpoint = floor(w.ws_col/16.0);
+
 		sun_pos = celestial(JD2, lat, lng, n, 25, tz);
 		n+=increment;
 		if(n > 24*60) n = 0.01;
@@ -275,12 +300,14 @@ int main(){
 		fprintf(file, "midpoint x: %f\t", 86.5);
 		double test = 86.500000;
 		point_f spoint = shadow_point(&sun_pos, 1, s.midpoint);
+		spoint = shadow_point2(&sun_pos, 1, s.midpoint, y_midpoint);
+		
 
-		// int x = ceil(spoint.x);
-		// int y = ceil(spoint.y);
+		int x = ceil(spoint.y);
+		int y = ceil(spoint.x);
 
-		int x = ceil(spoint.x);
-		int y = ceil(spoint.y);
+		// int x = ceil(spoint.x + 10);
+		// int y = ceil(spoint.y + half_width/2.0);
 		
 		fprintf(file, "sc shadow x: %i\t", y);
 		fprintf(file, "sc shadow y: %i\n", x);
