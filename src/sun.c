@@ -136,15 +136,6 @@ double calc_earth_ecc(double t){
 	return deg_to_rad(0.016708634 - t * (0.000042037 + 0.0000001267 * t));
 }
 
-double get_hla(double lat, double ha){
-	return atan(cos(lat)*tan(ha*(PI/180)));
-}
-
-double get_ha(int hour){
-	(hour - 12) * 15;
-	return (hour - 12) * 15;
-}
-
 // returns AUs
 double calc_sun_rad_vector(double t) {
 	double l0 = calc_mean_lng_sun(t);

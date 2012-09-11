@@ -56,10 +56,22 @@ point_f tick_point(double hla, int shadow_length){
 	return pos;
 }
 
+double fit_bound(double min, double max, double x){
+	return 1.0;
+}
+
+double get_hla(double lat, double ha){
+	return atan(cos(lat)*tan(ha*(PI/180)));
+}
+
+double get_ha(int hour){
+	(hour - 12) * 15;
+	return (hour - 12) * 15;
+}
+
 void draw_ticks(int x_offset, int y_offset, int lat, int shadow_length){
 	FILE *file;
-	file = fopen("out.txt","a+");
-	
+	file = fopen("ticks.txt","a+");
 
 	int hours[] = {6,7,8,9,10,11,12,13,14,15,16,17,18};
 
@@ -75,22 +87,27 @@ void draw_ticks(int x_offset, int y_offset, int lat, int shadow_length){
 		double hla = get_hla(lat, ha);
 		double xform = hla * 180 / PI + 90;
 		point_f tick = tick_point(hla, 10);
-		// fprintf(file,"ha: %f\t", ha);
-		// fprintf(file,"hla: %f\t", hla);
-		// fprintf(file,"xform: %f\t", xform);
-		// fprintf(file, "hour: %i\t", *iter);
-		// fprintf(file, "x: %f\t", tick.x);
-		// fprintf(file, "y: %f\t", tick.y);
-		// fprintf(file, "x: %f\t", f.x);
-		// fprintf(file, "y: %f\n", f.y);
+		fprintf(file,"ha: %f\t", ha);
+		fprintf(file,"hla: %f\t", hla);
+		fprintf(file,"xform: %f\t", xform);
+		fprintf(file, "hour: %i\t\t", *iter);
+		fprintf(file, "x: %f\t\t", tick.x);
+		fprintf(file, "y: %f\t\t", tick.y);
+		fprintf(file, "x: %f\t\t", f.x);
+		fprintf(file, "y: %f\t\t", f.y);
 
-		mvaddch(x_offset+ceil(tick.x*f.x*3), y_offset+ceil(tick.y*f.y*10), '*');
+		int x = x_offset+ceil(tick.x*f.x*3)+10;
+		int y = y_offset+ceil(tick.y*f.y*10);
+		fprintf(file, "scaled x: %i\t", x);
+		fprintf(file, "scaled y: %i\n", y);
+
+		mvaddch(y,x, '*');
 	}
 	fclose(file);
 }
 
 point_f shadow_point (s_coord2* sun_pos, int shadow_length, double midpoint){
-	double angle = atan2(sun_pos->elevation, sun_pos->azimuth);
+	double angle = atan2(sun_pos->elevation, sun_pos->azimuth) *1.5;
 	FILE *file; 
 	file = fopen("shadow.txt","a+");
 	shadow_length = 3;
@@ -101,6 +118,7 @@ point_f shadow_point (s_coord2* sun_pos, int shadow_length, double midpoint){
 		// fprintf(file, "over midpoint: %f\t", sun_pos->azimuth);
 		// p.x = sin(angle)*(shadow_length+PI/2.0);
 		p.x = sin(-1*angle) * shadow_length;
+		// p.x = sin(angle + PI/2) * shadow_length;
 	} else {
 		p.x = sin(angle) * shadow_length;
 	}
@@ -120,7 +138,8 @@ point_f shadow_point (s_coord2* sun_pos, int shadow_length, double midpoint){
 	// p.x = sun_pos->azimuth;
 	// p.y = sun_pos->elevation *-1.0 +49;
 
-	fprintf(file, "s.angle: %f\t", (180.0 * angle) / PI);
+	fprintf(file, "s.angle rad: %f\t", angle);
+	fprintf(file, "s.angle deg: %f\t", (180.0 * angle) / PI);
 	fprintf(file, "x: %f\t", sun_pos->azimuth);
 	fprintf(file, "s.y: %f\t", p.y);
 	fprintf(file, "s.x: %f\n", p.x);
@@ -134,6 +153,7 @@ int main(){
 	remove("out.txt");
 	remove("shadow.txt");
 	remove("scaling.txt");
+	remove("ticks.txt");
 	point a;
 	a.x = 5;
 	a.y = 5;
@@ -179,7 +199,7 @@ int main(){
 		printf("\televation: %f", sun_pos.elevation);
 		printf("\thour: %f\n", hour);
 		
-		n+=n;
+		n += n;
 
 		if(n > 24*60) n = 1/60;
 		sleep(1);
@@ -242,7 +262,7 @@ int main(){
 
 		j++;
 
-		usleep(8000);
+		// usleep(8000);
 		refresh();
 	}
 	fclose(file);
