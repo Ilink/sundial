@@ -9,32 +9,8 @@
 #include "types.h"
 #include "sun.h"
 #include "scaling.h"
+#include "util.h"
 #include "main.h"
-
-void draw_line(int x0, int y0, int x1, int y1, char render_char){
-	int dx = abs(x1-x0);
-	int dy = abs(y1-y0);
-	int sx = x0 < x1 ? 1 : -1;
-	int sy = y0 < y1 ? 1 : -1;
-
-	// this examines how steep the slope is
-	int err = dx - dy;
-
-	for(;;){
-		mvaddch(y0, x0, render_char);
-		if(x0 == x1 && y0 == y1) break;
-		int e2 = 2*err; 
-
-		// i think this examines whether or not the slope is steep enough to have Y be the driving force. A steep line should iterate over Y instead of X.
-		if(e2 > -dy){
-			err -= dy; // reset the accumulation to 0
-			x0 += sx;
-		} else if(e2 < dx){
-			err += dx; // accumulate more fractions
-			y0 += sy;
-		}
-	}
-}
 
 scale_factor get_scale(){
 	struct winsize w;
@@ -86,8 +62,6 @@ int draw_ticks(int x_offset, int y_offset, int lat, int a){
 	double half_width = w.ws_col / 2.0;
 
 	for(iter = &hours; iter < hours+size; ++iter){
-		// fprintf(file,"%i\t", iter); 
-		// fprintf(file,"%i\n", *iter);
 		double ha = get_ha(*iter);
 		double hla = get_hla(lat, ha);
 		double xform = hla * 180 / PI + 90;
@@ -135,17 +109,11 @@ point_f shadow_point (s_coord2* sun_pos, int shadow_length, double midpoint){
   
 	point_f p;
 	if(sun_pos->azimuth >= midpoint){
-		// angle += PI/2.0;
-		// fprintf(file, "over midpoint: %f\t", sun_pos->azimuth);
-		// p.x = sin(angle)*(shadow_length+PI/2.0);
 		p.x = sin(-1*angle) * shadow_length;
-		// p.x = sin(angle + PI/2) * shadow_length;
 	} else {
 		p.x = sin(angle) * shadow_length;
 	}
 
-	
-	// p.x = sin(-1*angle) * shadow_length;
 	p.y = cos(angle) * shadow_length;
 
 	if(sun_pos->azimuth >= midpoint){
@@ -154,10 +122,6 @@ point_f shadow_point (s_coord2* sun_pos, int shadow_length, double midpoint){
 		p.x = 10 * (p.x-0.01)+8;
 	}
 	p.y = 10 * (p.y-2.8) / 0.15;
-
-
-	// p.x = sun_pos->azimuth;
-	// p.y = sun_pos->elevation *-1.0 +49;
 
 	fprintf(file, "s.angle rad: %f\t", angle);
 	fprintf(file, "s.angle deg: %f\t", (180.0 * angle) / PI);
@@ -173,14 +137,12 @@ point_f shadow_point2(s_coord2* sun_pos, int shadow_length, double midpoint, dou
 	FILE *file; 
 	file = fopen("shadow2.txt","a+");
 
-	// shadow_length = 10; // this should change based upon size of window
-
 	// convert to relative coordinates
 	double rel_x = sun_pos->azimuth - midpoint;
 	double rel_y = sun_pos->elevation - y_midpoint;
 
 	double angle = atan2(rel_y,rel_x);
-	double x = cos(-1*angle) * shadow_length;
+	double x = cos(angle - (PI/2)) * shadow_length;
 	double y = sin(-1*angle) * shadow_length;
 
 	fprintf(file, "y: %f\t", y);
@@ -220,39 +182,8 @@ int main(){
 	printf("Azimuth: %f\n", sun_pos.azimuth);
 	printf("Elevation: %f\n", sun_pos.elevation);
 
-	// console_scale(&sun_pos);
-
 	printf("Scaled Azimuth: %f\n", sun_pos.azimuth);
 	printf("Scaled Elevation: %f\n", sun_pos.elevation);
-
-	// test area
-	// draw_ticks(0,0, lat, 1);
-	// end
-
-	// sun_pos.r = au_to_km(sun_pos.r);
-
-	// point_3d sun_pos_cart = spherical_to_cart(&sun_pos);
-
-	// printf("X: %f\n", sun_pos_cart.x);
-	// printf("Y: %f\n", sun_pos_cart.y);
-	// printf("Z: %f\n", sun_pos_cart.z);
-
-	n = 1/60;
-	while(1){
-		break;
-		s_coord2 sun_pos = celestial(JD2, lat, lng, n, 25, -8.0);
-		// console_scale(&sun_pos);
-		double hour = get_local()+n;
-		printf("azimuth: %f", sun_pos.azimuth);
-		printf("\televation: %f", sun_pos.elevation);
-		printf("\thour: %f\n", hour);
-		
-		n += n;
-
-		if(n > 24*60) n = 1/60;
-		// sleep(1);
-	}
-
 
 	// Initialize ncurses
 	initscr();
@@ -280,14 +211,12 @@ int main(){
 	draw_ticks(offset_x,offset_x, lat, 0);
 	fprintf(file, "offset from first: %i\t", offset_x);
 
-	
-	mvaddch(0, 0, 'o');
 	refresh();
 	sun_pos = celestial(JD2, lat, lng, n, 25, tz);
+	point_f sun_pos_point = s_coord_to_point(&sun_pos);
 	graph_info g = get_graph_info(JD2, lat, lng, 1.0, tz);
 
 	while(1) {
-		// break;
 		clear();
 		struct winsize w;
 		ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);

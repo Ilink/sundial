@@ -17,27 +17,9 @@ typedef struct {
 } point_f;
 
 typedef struct {
-	double delta;
-	double alpha;
-	double r;
-} celestial_coord;
-
-typedef struct {
 	double lat;
 	double lng;
 } ecliptic_coord;
-
-typedef struct {
-	double x;
-	double y;
-	double z;
-} point_3d;
-
-typedef struct {
-	double zenith;
-	double altitude;
-	double r;
-} s_coord;
 
 typedef struct {
 	double azimuth;
@@ -53,5 +35,11 @@ typedef struct {
 typedef struct{
 	double midpoint;
 } scale_stuff;
+
+typedef struct{
+	double midpoint;
+	double x_scale;
+	double y_scale;
+} scale_info;
 
 #endif

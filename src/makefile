@@ -2,10 +2,12 @@ CC=gcc
 # CFLAGS = -I/usr/include/ncurses -lncurses
 CFLAGS = -I/usr/local/include/ncurses -lncurses
 
-sundial: main.o scaling.o sun.o types.o
-	$(CC) -o build/sundial main.o scaling.o sun.o types.o $(CFLAGS)
+sundial: main.o scaling.o sun.o types.o util.o
+	$(CC) -o build/sundial main.o scaling.o sun.o types.o util.o $(CFLAGS)
 
 main.o: main.c
+
+util.o: util.c
 
 scaling.o: scaling.c
 

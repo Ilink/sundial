@@ -54,15 +54,6 @@ double rad_to_deg(double x){
 	return 180.0 * x / PI;
 }
 
-point_3d spherical_to_cart(s_coord2* s_coord){
-	point_3d point;
-	double sin_elevation = sin(s_coord->elevation);
-	point.x = s_coord->r*sin_elevation*cos(s_coord->azimuth);
-	point.y = s_coord->r*sin_elevation*sin(s_coord->azimuth);
-	point.z = s_coord->r*cos(s_coord->elevation);
-	return point;
-}
-
 double au_to_km(double au){
 	return au*149598000.0;
 }
