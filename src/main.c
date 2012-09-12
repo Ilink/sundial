@@ -288,6 +288,7 @@ int main(){
 
 	while(1) {
 		// break;
+		clear();
 		struct winsize w;
 		ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
 
@@ -317,7 +318,7 @@ int main(){
 		
 
 		// int x = ceil(spoint.y+4);
-		int x = ceil(spoint.y);
+		int x = ceil(spoint.y+ w.ws_row/1.5);
 		int y = ceil(spoint.x+s.midpoint-2);
 
 		// int x = ceil(spoint.x + 10);
@@ -327,16 +328,16 @@ int main(){
 		fprintf(file, "sc shadow y: %i\n", x);
 		
 
-		// draw_line(70, 25, ceil(spoint.x), ceil(spoint.y), 'x'); // this one is right!
+		draw_line(s.midpoint, 25, y, x, 'x'); // this one is right!
 		// draw_line(70, 25, 20, 0, 'x');
 
 
-		mvaddch(x,y, 'o');
+		// mvaddch(x,y, 'o');
 		mvaddch(floor(sun_pos.elevation), floor(sun_pos.azimuth), main_char);
 
 		j++;
 
-		// usleep(5000);
+		usleep(5000);
 		refresh();
 	}
 	fclose(file);
