@@ -12,6 +12,13 @@
 #include "util.h"
 #include "main.h"
 
+struct Arg {
+	int x_offset;
+	int y_offset;
+	int lat;
+	int a;
+};
+
 scale_factor get_scale(){
 	struct winsize w;
 	ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
@@ -46,7 +53,8 @@ double get_ha(int hour){
 }
 
 // expects: int x_offset, int y_offset, int lat, int a
-void* draw_ticks(void* args){
+void* draw_ticks(void* o_args){
+	struct Arg* args = (struct Arg*) o_args;
 	FILE *file;
 	file = fopen("ticks.txt","a+");
 
@@ -64,7 +72,7 @@ void* draw_ticks(void* args){
 
 	for(iter = &hours; iter < hours+size; ++iter){
 		double ha = get_ha(*iter);
-		double hla = get_hla(lat, ha);
+		double hla = get_hla(args->lat, ha);
 		double xform = hla * 180 / PI + 90;
 		point_f tick = tick_point(hla, 10);
 		fprintf(file,"ha: %f\t", ha);
@@ -75,14 +83,14 @@ void* draw_ticks(void* args){
 		fprintf(file, "y: %f\t\t", tick.y);
 		fprintf(file, "x: %f\t\t", f.x);
 		fprintf(file, "y: %f\t\t", f.y);
-		fprintf(file, "offset: %i\t\t", x_offset);
+		fprintf(file, "offset: %i\t\t", args->x_offset);
 
-		int x = x_offset+12+ceil(tick.x*f.x*3);
-		int y = half_width-(y_offset*2.25)+ceil(tick.y*f.y*10);
+		int x = args->x_offset+12+ceil(tick.x*f.x*3);
+		int y = half_width-(args->y_offset*2.25)+ceil(tick.y*f.y*10);
 		fprintf(file, "scaled x: %i\t", x);
 		fprintf(file, "scaled y: %i\n", y);
 
-		if(a){
+		if(args->a){
 			if(*iter == 6){
 				first = y;
 			}
@@ -92,10 +100,12 @@ void* draw_ticks(void* args){
 			mid = abs(mid - first);
 		}
 
-		if(!a){
+		if(!args->a){
 			mvaddch(x,y, '*');
 		}
 	}
+
+	mvaddch(0,0, '*');
 
 	fclose(file);
 	return mid;
@@ -165,13 +175,6 @@ int main(){
 	remove("shadow2.txt");
 	remove("scaling.txt");
 	remove("ticks.txt");
-	point a;
-	a.x = 5;
-	a.y = 5;
-
-	point b;
-	b.x = 0;
-	b.y = 0;
 
 	double JD2 = get_jd(2012, 8, 31);
 	printf("JD 8/31/12: %f\n", JD2);
@@ -208,21 +211,15 @@ int main(){
 	FILE* file;
 	file = fopen("out.txt","a+");
 
-	struct Args {
-		int x_offset;
-		int y_offset;
-		int lat;
-		int a;
-	}
-	Args* args = malloc Args;
+	struct Arg* args = malloc(sizeof args);
 	args->x_offset = 0;
 	args->y_offset = 0;
 	args->lat = lat;
-	args->a = a;
+	args->a = 1;
 
 	int offset_x = draw_ticks(args);
 
-	draw_ticks(offset_x,offset_x, lat, 0);
+	// draw_ticks(offset_x,offset_x, lat, 0);
 	fprintf(file, "offset from first: %i\t", offset_x);
 
 	refresh();
@@ -234,6 +231,8 @@ int main(){
 		clear();
 		struct winsize w;
 		ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
+
+		int offset_x = draw_ticks(args);
 
 		double x_ratio = (double) w.ws_col / 700.0; // these are named wrong..let's keep it that way
 		double y_ratio = (double) w.ws_row / 360.0;
