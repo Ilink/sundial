@@ -45,7 +45,8 @@ double get_ha(int hour){
 	return (hour - 12) * 15;
 }
 
-int draw_ticks(int x_offset, int y_offset, int lat, int a){
+// expects: int x_offset, int y_offset, int lat, int a
+void* draw_ticks(void* args){
 	FILE *file;
 	file = fopen("ticks.txt","a+");
 
@@ -207,7 +208,20 @@ int main(){
 	FILE* file;
 	file = fopen("out.txt","a+");
 
-	int offset_x = draw_ticks(0,0, lat, 1);
+	struct Args {
+		int x_offset;
+		int y_offset;
+		int lat;
+		int a;
+	}
+	Args* args = malloc Args;
+	args->x_offset = 0;
+	args->y_offset = 0;
+	args->lat = lat;
+	args->a = a;
+
+	int offset_x = draw_ticks(args);
+
 	draw_ticks(offset_x,offset_x, lat, 0);
 	fprintf(file, "offset from first: %i\t", offset_x);
 
