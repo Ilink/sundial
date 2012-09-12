@@ -57,58 +57,62 @@ void* draw_ticks(void* o_args){
 	struct Arg* args = (struct Arg*) o_args;
 	FILE *file;
 	file = fopen("ticks.txt","a+");
+	
+	while(1){
+		int hours[] = {6,7,8,9,10,11,12,13,14,15,16,17,18};
 
-	int hours[] = {6,7,8,9,10,11,12,13,14,15,16,17,18};
+		int* iter;
+		int size = sizeof(hours) / sizeof(int);
 
-	int* iter;
-	int size = sizeof(hours) / sizeof(int);
+		scale_factor f = get_scale();
+		int first=0; int mid=0;
 
-	scale_factor f = get_scale();
-	int first=0; int mid=0;
+		struct winsize w;
+		ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
+		double half_width = w.ws_col / 2.0;
 
-	struct winsize w;
-	ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
-	double half_width = w.ws_col / 2.0;
+		for(iter = &hours; iter < hours+size; ++iter){
+			double ha = get_ha(*iter);
+			double hla = get_hla(args->lat, ha);
+			double xform = hla * 180 / PI + 90;
+			point_f tick = tick_point(hla, 10);
+			fprintf(file,"ha: %f\t", ha);
+			fprintf(file,"hla: %f\t", hla);
+			fprintf(file,"xform: %f\t", xform);
+			fprintf(file, "hour: %i\t\t", *iter);
+			fprintf(file, "x: %f\t\t", tick.x);
+			fprintf(file, "y: %f\t\t", tick.y);
+			fprintf(file, "x: %f\t\t", f.x);
+			fprintf(file, "y: %f\t\t", f.y);
+			fprintf(file, "offset: %i\t\t", args->x_offset);
 
-	for(iter = &hours; iter < hours+size; ++iter){
-		double ha = get_ha(*iter);
-		double hla = get_hla(args->lat, ha);
-		double xform = hla * 180 / PI + 90;
-		point_f tick = tick_point(hla, 10);
-		fprintf(file,"ha: %f\t", ha);
-		fprintf(file,"hla: %f\t", hla);
-		fprintf(file,"xform: %f\t", xform);
-		fprintf(file, "hour: %i\t\t", *iter);
-		fprintf(file, "x: %f\t\t", tick.x);
-		fprintf(file, "y: %f\t\t", tick.y);
-		fprintf(file, "x: %f\t\t", f.x);
-		fprintf(file, "y: %f\t\t", f.y);
-		fprintf(file, "offset: %i\t\t", args->x_offset);
+			int x = args->x_offset+12+ceil(tick.x*f.x*3);
+			int y = half_width-(args->y_offset*2.25)+ceil(tick.y*f.y*10);
+			fprintf(file, "scaled x: %i\t", x);
+			fprintf(file, "scaled y: %i\n", y);
 
-		int x = args->x_offset+12+ceil(tick.x*f.x*3);
-		int y = half_width-(args->y_offset*2.25)+ceil(tick.y*f.y*10);
-		fprintf(file, "scaled x: %i\t", x);
-		fprintf(file, "scaled y: %i\n", y);
-
-		if(args->a){
-			if(*iter == 6){
-				first = y;
+			if(args->a){
+				if(*iter == 6){
+					first = y;
+				}
+				if(*iter == 12){
+					mid = y;
+				}
+				mid = abs(mid - first);
 			}
-			if(*iter == 12){
-				mid = y;
+
+			if(!args->a){
+				mvaddch(x,y, '*');
 			}
-			mid = abs(mid - first);
 		}
 
-		if(!args->a){
-			mvaddch(x,y, '*');
-		}
+		mvaddch(0,0, '*');
+
+		
 	}
-
-	mvaddch(0,0, '*');
-
+	pthread_exit(NULL);
 	fclose(file);
-	return mid;
+	// return mid;
 }
 
 point_f shadow_point (s_coord2* sun_pos, int shadow_length, double midpoint){
@@ -217,10 +221,21 @@ int main(){
 	args->lat = lat;
 	args->a = 1;
 
-	int offset_x = draw_ticks(args);
+	// int offset_x = draw_ticks(args);
+	pthread_t threads[5];
+	int rc;
+	
+	rc = pthread_create(&threads[0], NULL, draw_ticks, args);
+	if (rc){
+		printf("ERROR; return code from pthread_create() is %d\n", rc);
+		exit(-1);
+	}
+	
+
+
 
 	// draw_ticks(offset_x,offset_x, lat, 0);
-	fprintf(file, "offset from first: %i\t", offset_x);
+	// fprintf(file, "offset from first: %i\t", offset_x);
 
 	refresh();
 	sun_pos = celestial(JD2, lat, lng, n, 25, tz);
@@ -232,7 +247,7 @@ int main(){
 		struct winsize w;
 		ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
 
-		int offset_x = draw_ticks(args);
+		// int offset_x = draw_ticks(args);
 
 		double x_ratio = (double) w.ws_col / 700.0; // these are named wrong..let's keep it that way
 		double y_ratio = (double) w.ws_row / 360.0;
@@ -283,4 +298,5 @@ int main(){
 	}
 	fclose(file);
 	endwin(); // clear ncurses's junk
+	pthread_exit(NULL);
 }
