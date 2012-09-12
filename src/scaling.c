@@ -7,46 +7,7 @@
 #include "scaling.h"
 #include "sun.h"
 
-scale_stuff console_scale(s_coord2* coord, double midpoint){
-	struct winsize w;
-	ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
-
-	// these dont really work too well, they should be better
-	double x_ratio = (double) w.ws_col / 700.0; // these are named wrong..let's keep it that way
-	double y_ratio = (double) w.ws_row / 360.0;
-
-	double half_width = w.ws_col / 2.0;
-	// double x_offset = half_width - 
-
-	double true_offset = midpoint*y_ratio+half_width;
-	// midpoint = true_offset - (y_ratio * midpoint);
-	midpoint = half_width;
-	// g->midpoint = half_width;
-
-	double new_azimuth = -1*(coord->azimuth * y_ratio) + floor(true_offset);
-	coord->azimuth = new_azimuth;
-
-	double new_ele = -1*(coord->elevation * x_ratio * 0.9) + floor(w.ws_col/16.0);
-	coord->elevation = new_ele;
-
-	FILE *file; 
-	file = fopen("out.txt","a+");  
-	fprintf(file,"midpoint (x): %f\t", midpoint); 
-	fprintf(file,"scaled azi (x): %f\t", new_azimuth); 
-	fprintf(file,"scaled ele (y): %f\n", new_ele); 
-	
-	// fprintf(file, "col: %f\n", floor(w.ws_col/5.0));
-
-	fprintf(file,"col console (x): %i\t", w.ws_col);
-	fprintf(file, "row console (y): %i\n\n", w.ws_row);
-
-	fclose(file);
-	scale_stuff s;
-	s.midpoint = midpoint;
-	return s;
-}
-
-// scale_info console_scale(point_f* coord, double midpoint){
+// scale_stuff console_scale(s_coord2* coord, double midpoint){
 // 	struct winsize w;
 // 	ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
 
@@ -84,6 +45,39 @@ scale_stuff console_scale(s_coord2* coord, double midpoint){
 // 	s.midpoint = midpoint;
 // 	return s;
 // }
+
+scale_info console_scale(point_f* coord, double midpoint){
+	struct winsize w;
+	ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
+
+	// these dont really work too well, they should be better
+	double y_ratio = (double) w.ws_col / 700.0;
+	double x_ratio = (double) w.ws_row / 360.0;
+
+	double half_width = w.ws_col / 2.0;
+
+	double true_offset = midpoint*y_ratio+half_width;
+	midpoint = half_width;
+
+	coord->x = -1*(coord->x * x_ratio) + floor(true_offset);
+	coord->y = -1*(coord->y * y_ratio * 0.9) + floor(w.ws_col/16.0);
+
+	FILE *file; 
+	file = fopen("out.txt","a+");  
+	fprintf(file,"midpoint (x): %f\t", midpoint); 
+	fprintf(file,"scaled x: %f\t", coord->y); 
+	fprintf(file,"scaled y: %f\n", coord->x); 
+	
+	fprintf(file,"col console (x): %i\t", w.ws_col);
+	fprintf(file, "row console (y): %i\n\n", w.ws_row);
+
+	fclose(file);
+	scale_info s;
+	s.midpoint = midpoint;
+	s.x_scale = x_ratio;
+	s.y_scale = y_ratio;
+	return s;
+}
 
 graph_info get_graph_info(double jd, double lat, double lng, double precision, double tz){
 	double midpoint;	

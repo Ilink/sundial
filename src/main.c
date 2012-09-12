@@ -133,13 +133,13 @@ point_f shadow_point (s_coord2* sun_pos, int shadow_length, double midpoint){
 	return p;
 }
 
-point_f shadow_point2(s_coord2* sun_pos, int shadow_length, double midpoint, double y_midpoint){
+point_f shadow_point2(point_f* sun_pos, int shadow_length, double midpoint, double y_midpoint){
 	FILE *file; 
 	file = fopen("shadow2.txt","a+");
 
 	// convert to relative coordinates
-	double rel_x = sun_pos->azimuth - midpoint;
-	double rel_y = sun_pos->elevation - y_midpoint;
+	double rel_x = sun_pos->x - midpoint;
+	double rel_y = sun_pos->y - y_midpoint;
 
 	double angle = atan2(rel_y,rel_x);
 	double x = cos(angle - (PI/2)) * shadow_length;
@@ -233,8 +233,9 @@ int main(){
 		// fprintf(file, 'highest: %f\t', );
 		// console_scale(&sun_pos, g.midpoint);
 		double midpoint = g.midpoint;
-		scale_stuff s;
-		s = console_scale(&sun_pos, g.midpoint);
+		scale_info s;
+		point_f sun_pos_coord = s_coord_to_point(&sun_pos);
+		s = console_scale(&sun_pos_coord, g.midpoint);
 
 
 		fprintf(file, "midpoint (weird) x: %f\t", s.midpoint);
@@ -258,8 +259,6 @@ int main(){
 		
 
 		draw_line(s.midpoint, 25, y, x, 'x'); // this one is right!
-		// draw_line(70, 25, 20, 0, 'x');
-
 
 		// mvaddch(x,y, 'o');
 		mvaddch(floor(sun_pos.elevation), floor(sun_pos.azimuth), main_char);
