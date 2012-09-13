@@ -77,12 +77,12 @@ int main(){
 	graph_info g = get_graph_info(JD2, lat, lng, 1.0, tz);
 
 	while(1) {
-		// clear();
-		struct winsize w;
-		ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
+		clear();
 
-		double half_width = w.ws_col / 2.0;
-		double y_midpoint = floor(w.ws_col/16.0);
+		screen_info screen = get_screen_info();
+
+		double half_width = screen.width / 2.0;
+		double y_midpoint = floor(screen.height/3.0);
 
 		sun_pos = celestial(JD2, lat, lng, n, 25, tz);
 		n+=increment;
@@ -91,13 +91,16 @@ int main(){
 		double midpoint = g.midpoint;
 		scale_info s;
 		point_f sun_pos_coord = s_coord_to_point(&sun_pos);
-		s = console_scale(&sun_pos_coord, g.midpoint);
+		s = scale_sun_pos(&sun_pos_coord, g.midpoint);
 
-		double shadow_length = w.ws_row/3.3;
+		double shadow_length = screen.height/5.0;
 		point_f spoint = shadow_point(&sun_pos_coord, shadow_length, s.midpoint, y_midpoint);
 
-		int x = ceil(spoint.y+ w.ws_row/1.5);
-		int y = ceil(spoint.x+s.midpoint-2);
+		// int x = ceil(spoint.y+screen.width/1.5);
+		// int y = ceil(spoint.x+s.midpoint-2);
+
+		int x = ceil(spoint.y+screen.width/1.5);
+		int y = ceil(spoint.x);
 		
 		// fprintf(file, "sc shadow x: %i\t", y);
 		// fprintf(file, "sc shadow y: %i\n", x);
@@ -105,7 +108,7 @@ int main(){
 		draw_line(s.midpoint, 25, y, x, 'x'); // this one is right, but needs y-scaling
 
 		// mvaddch(x,y, 'o');
-		mvaddch(floor(sun_pos_coord.y), floor(sun_pos_coord.x), '~');
+		mvaddch(floor(sun_pos_coord.y), floor(sun_pos_coord.x), '5');
 
 		j++;
 
