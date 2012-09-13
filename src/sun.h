@@ -1,6 +1,8 @@
 #ifndef SUN_H
 #define SUN_H
 
-s_coord2 celestial(double jd, double lat, double lng, double increment, double hour, double tz);
+s_coord celestial(double jd, double lat, double lng, double increment, double hour, double tz);
+double get_ha(int hour);
+double get_hla(double lat, double ha);
 
 #endif

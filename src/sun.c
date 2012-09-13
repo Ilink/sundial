@@ -9,6 +9,15 @@
 #include "types.h"
 #include "sun.h"
 
+double get_hla(double lat, double ha){
+	return atan(cos(lat)*tan(ha*(PI/180)));
+}
+
+double get_ha(int hour){
+	(hour - 12) * 15;
+	return (hour - 12) * 15;
+}
+
 // returns hour + fraction
 double get_ut(){
 	time_t rawtime;
@@ -193,7 +202,7 @@ double calc_eq_time(double t){
 	return rad_to_deg(Etime)*4.0; // in minutes of time
 }
 
-s_coord2 celestial(double jd, double lat, double lng, double increment, double hour, double tz){
+s_coord celestial(double jd, double lat, double lng, double increment, double hour, double tz){
 	if(hour == 25){
 		hour = get_ut();
 		hour = get_local()+increment;
@@ -282,7 +291,7 @@ s_coord2 celestial(double jd, double lat, double lng, double increment, double h
 	printf("solar zenith %f\n", solar_zenith);
 	printf("Refraction correction%f\n", ref_corr);
 
-	s_coord2 coord;
+	s_coord coord;
 	printf("Azimuth: %f\n", azimuth);
 	coord.azimuth = azimuth;
 	coord.r = r;

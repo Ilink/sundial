@@ -3,7 +3,7 @@
 
 extern double const PI;
 extern double const jd2k;
-#define printf(fmt, ...) (0)
+#define printf(fmt, ...) (0) // shouldnt be printing to the screen with ncurses going on
 // #define fprintf(fmt,...) (0)
 
 typedef struct {
@@ -25,7 +25,7 @@ typedef struct {
 	double azimuth;
 	double r;
 	double elevation;
-} s_coord2;
+} s_coord;
 
 typedef struct {
 	double x;
