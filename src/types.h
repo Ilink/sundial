@@ -28,9 +28,11 @@ typedef struct {
 } s_coord;
 
 typedef struct {
-	double x;
-	double y;
-} scale_factor;
+	int width;
+	int height;
+	double scale_x;
+	double scale_y;
+} screen_info;
 
 typedef struct{
 	double midpoint;

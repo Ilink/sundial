@@ -77,7 +77,7 @@ int main(){
 	graph_info g = get_graph_info(JD2, lat, lng, 1.0, tz);
 
 	while(1) {
-		clear();
+		// clear();
 		struct winsize w;
 		ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
 
@@ -93,28 +93,24 @@ int main(){
 		point_f sun_pos_coord = s_coord_to_point(&sun_pos);
 		s = console_scale(&sun_pos_coord, g.midpoint);
 
-		fprintf(file, "midpoint (weird) x: %f\t", s.midpoint);
-		fprintf(file, "midpoint x: %f\t", 86.5);
-		double test = 86.500000;
-
 		double shadow_length = w.ws_row/3.3;
 		point_f spoint = shadow_point(&sun_pos_coord, shadow_length, s.midpoint, y_midpoint);
 
 		int x = ceil(spoint.y+ w.ws_row/1.5);
 		int y = ceil(spoint.x+s.midpoint-2);
 		
-		fprintf(file, "sc shadow x: %i\t", y);
-		fprintf(file, "sc shadow y: %i\n", x);
+		// fprintf(file, "sc shadow x: %i\t", y);
+		// fprintf(file, "sc shadow y: %i\n", x);
 		
-
 		draw_line(s.midpoint, 25, y, x, 'x'); // this one is right, but needs y-scaling
 
 		// mvaddch(x,y, 'o');
-		mvaddch(floor(sun_pos_coord.y), floor(sun_pos_coord.x), main_char);
+		mvaddch(floor(sun_pos_coord.y), floor(sun_pos_coord.x), '~');
 
 		j++;
 
-		usleep(5000);
+		usleep(500);
+		// usleep(5000);
 		refresh();
 	}
 	fclose(file);
