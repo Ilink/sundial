@@ -104,7 +104,7 @@ point_f shadow_point(point_f* sun_pos, int shadow_length, double midpoint, doubl
 	double rel_y = sun_pos->y - y_midpoint;
 
 	double angle = atan2(rel_y,rel_x);
-	double x = cos(angle - (PI/2)) * shadow_length;
+	double x = cos(-1*angle - (PI/2)) * shadow_length;
 	double y = sin(-1*angle) * shadow_length;
 
 	fprintf(file, "y: %f\t", y);

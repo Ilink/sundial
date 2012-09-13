@@ -99,15 +99,15 @@ int main(){
 		// int x = ceil(spoint.y+screen.width/1.5);
 		// int y = ceil(spoint.x+s.midpoint-2);
 
-		int x = ceil(spoint.y+screen.width/1.5);
-		int y = ceil(spoint.x);
+		int x = ceil(spoint.y+5);
+		int y = ceil(spoint.x*10);
 		
-		// fprintf(file, "sc shadow x: %i\t", y);
-		// fprintf(file, "sc shadow y: %i\n", x);
+		fprintf(file, "sc shadow x: %i\t", y);
+		fprintf(file, "sc shadow y: %i\n", x);
 		
 		draw_line(s.midpoint, 25, y, x, 'x'); // this one is right, but needs y-scaling
 
-		// mvaddch(x,y, 'o');
+		mvaddch(x,y, 'o');
 		mvaddch(floor(sun_pos_coord.y), floor(sun_pos_coord.x), '5');
 
 		j++;
