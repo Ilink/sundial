@@ -290,6 +290,7 @@ int main(){
 
 		// mvaddch(x,y, 'o');
 		mvaddch(floor(sun_pos.elevation), floor(sun_pos.azimuth), main_char);
+		mvaddch(floor(sun_pos_coord.y), floor(sun_pos_coord.x), main_char);
 
 		j++;
 
