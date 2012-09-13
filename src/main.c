@@ -99,8 +99,8 @@ int main(){
 		// int x = ceil(spoint.y+screen.width/1.5);
 		// int y = ceil(spoint.x+s.midpoint-2);
 
-		int x = ceil(spoint.y+5);
-		int y = ceil(spoint.x*10);
+		int x = ceil(spoint.y);
+		int y = ceil(spoint.x);
 		
 		fprintf(file, "sc shadow x: %i\t", y);
 		fprintf(file, "sc shadow y: %i\n", x);

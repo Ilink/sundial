@@ -104,13 +104,21 @@ point_f shadow_point(point_f* sun_pos, int shadow_length, double midpoint, doubl
 	double rel_y = sun_pos->y - y_midpoint;
 
 	double angle = atan2(rel_y,rel_x);
-	double x = cos(-1*angle - (PI/2)) * shadow_length;
+
+	double x;
+	if(angle >= -1*PI/2){
+		x = cos(-1*angle) * shadow_length +10;
+	} else {
+		x = cos(angle) * shadow_length + 10;
+	}
 	double y = sin(-1*angle) * shadow_length;
 
 	fprintf(file, "y: %f\t", y);
 	fprintf(file, "x: %f\t", x);
 	fprintf(file, "angle (deg): %f\t", angle* (180/PI));
-	fprintf(file, "angle (rad): %f\n", angle);
+	fprintf(file, "angle (rad): %f\t", angle);
+	fprintf(file, "rel_x: %f\t",rel_x);
+	fprintf(file, "rel_y: %f\n", rel_y);
 
 	point_f p;
 	p.x = x;
