@@ -126,7 +126,7 @@ point_f shadow_point (s_coord2* sun_pos, int shadow_length, double midpoint){
 	if(sun_pos->azimuth >= midpoint){
 		p.x = sin(-1*angle) * shadow_length;
 	} else {
-		p.x = sin(angle) * shadow_length;
+		p.x = sin(angle+PI) * shadow_length;
 	}
 
 	p.y = cos(angle) * shadow_length;
