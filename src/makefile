@@ -1,6 +1,6 @@
 CC=gcc
-# CFLAGS = -I/usr/include/ncurses -lncurses
-CFLAGS = -I/usr/local/include/ncurses -lncurses
+CFLAGS = -I/usr/include/ncurses -lncurses
+# CFLAGS = -I/usr/local/include/ncurses -lncurses
 
 sundial: main.o drawing.o sun.o types.o util.o
 	$(CC) -o build/sundial main.o drawing.o sun.o types.o util.o $(CFLAGS)
