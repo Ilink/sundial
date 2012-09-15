@@ -3,8 +3,9 @@
 
 extern double const PI;
 extern double const jd2k;
-#define printf(fmt, ...) (0) // shouldnt be printing to the screen with ncurses going on
-// #define fprintf(fmt,...) (0)
+// #define printf(fmt, ...) (0) // shouldnt be printing to the screen with ncurses going on
+#define fprintf(fmt,...) (0)
+// typedef enum { false, true } bool;
 
 typedef struct {
 	int x; 

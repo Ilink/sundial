@@ -111,7 +111,7 @@ point_f shadow_point(point_f* sun_pos, int shadow_length, double midpoint, doubl
 	} else {
 		x = cos(angle+PI) * shadow_length + midpoint;
 	}
-	double y = sin(-1*angle) * shadow_length + y_midpoint*2;
+	double y = sin(-1*angle) * shadow_length + y_midpoint;
 
 	fprintf(file, "y: %f\t", y);
 	fprintf(file, "x: %f\t", x);
