@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS = -I/usr/include/ncurses -lncurses
+CFLAGS = -I/usr/include/ncurses -lncurses -g
 # CFLAGS = -I/usr/local/include/ncurses -lncurses
 
 sundial: main.o drawing.o sun.o types.o util.o

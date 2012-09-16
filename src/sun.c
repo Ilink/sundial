@@ -203,8 +203,8 @@ double calc_eq_time(double t){
 }
 
 s_coord celestial(double jd, double lat, double lng, double increment, double hour, double tz){
-	// FILE *file;
-	// file = fopen("time2.txt","a+");
+	FILE *file;
+	file = fopen("time.txt","a+");
 	
 	// hour = increment;
 	if(hour == 25){
@@ -214,7 +214,9 @@ s_coord celestial(double jd, double lat, double lng, double increment, double ho
 	} else {
 		hour += increment;
 	}
-	hour = 600.0;
+
+	// hour = get_local();
+	// hour = 600.0;
 	
 	// hour = 12;
 	printf("HOUR: %f\n", hour);
@@ -226,7 +228,7 @@ s_coord celestial(double jd, double lat, double lng, double increment, double ho
 	time = (time - 2451545.0)/36525.0;
 	printf("time: %f\n", time);
 
-	// fprintf(file, "jd: %f\thour: %f\t\n", jd, hour);
+	fprintf(file, "jd: %f\thour: %f\t\n", jd, hour);
 
 	double eqtime = calc_eq_time(time);
 	printf("eqtime: %f\n", eqtime);
@@ -306,5 +308,6 @@ s_coord celestial(double jd, double lat, double lng, double increment, double ho
 	double el = floor((90.0-solar_zenith)*100+0.5)/100.0;
 	coord.elevation = el;
 
+	fclose(file);
 	return coord;
 }

@@ -119,17 +119,17 @@ int main(int argc, char *argv[]){
 	args->lat = lat;
 	args->a = 1;
 
-	pthread_t threads[5];
-	int rc;
-	rc = pthread_create(&threads[0], NULL, draw_ticks, args);
-	if (rc){
-		printf("ERROR; return code from pthread_create() is %d\n", rc);
-		exit(-1);
-	}
+	// pthread_t threads[5];
+	// int rc;
+	// rc = pthread_create(&threads[0], NULL, draw_ticks, args);
+	// if (rc){
+	// 	printf("ERROR; return code from pthread_create() is %d\n", rc);
+	// 	exit(-1);
+	// }
 	
 	refresh();
-	sun_pos = celestial(JD2, lat, lng, n, 8.0, tz);
-	point_f sun_pos_point = s_coord_to_point(&sun_pos);
+	// sun_pos = celestial(JD2, lat, lng, n, 8.0, tz);
+	// point_f sun_pos_point = s_coord_to_point(&sun_pos);
 	graph_info g = get_graph_info(JD2, lat, lng, 1.0, tz);
 
 	while(1) {
@@ -166,7 +166,7 @@ int main(int argc, char *argv[]){
 
 		j++;
 
-		usleep(500);
+		// usleep(50000);
 		// usleep(50000);
 
 		refresh();
