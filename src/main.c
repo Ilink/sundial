@@ -53,8 +53,10 @@ int main(int argc, char *argv[]){
 	
 	if(required_arguments.lat && required_arguments.lng){
 		printf("ALL SYSTEMS ARE GO");
+		// return;
 	} else {
 		lat = 37.9232; lng = -122.2937;
+		// return;
 	}
 
 	tz = -8.0;
@@ -79,6 +81,8 @@ int main(int argc, char *argv[]){
 	printf("JD 8/31/12: %f\n", JD2);
 	double J2k = get_jd(2000, 1, 1);
 	double n = 0;
+	s_coord sun_pos;
+	// sun_pos = celestial(JD2, lat, lng, n, 25, -8.0);
 
 	printf("Radial dist: %f\n", sun_pos.r);
 	printf("Azimuth: %f\n", sun_pos.azimuth);
@@ -93,12 +97,13 @@ int main(int argc, char *argv[]){
 	noecho();
 	cbreak();
 	keypad(stdscr, TRUE);
-	curs_set(0);	
+	curs_set(0);
 
 	// test symbol
 	char main_char = '@';
 
 	// Rendering loop
+	n = 0;
 	double increment = 1;
 
 	FILE* file;
@@ -159,6 +164,7 @@ int main(int argc, char *argv[]){
 		// usleep(50000);
 
 		refresh();
+		// sleep(30);
 	}
 	fclose(file);
 	endwin(); // clear ncurses's junk

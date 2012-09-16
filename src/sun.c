@@ -216,7 +216,7 @@ s_coord celestial(double jd, double lat, double lng, double increment, double ho
 	}
 
 	// hour = get_local();
-	// hour = 600.0;
+	// hour = 167.65;
 	
 	// hour = 12;
 	printf("HOUR: %f\n", hour);
@@ -224,7 +224,7 @@ s_coord celestial(double jd, double lat, double lng, double increment, double ho
 
 	double j2k = get_jd(2000, 1, 1);
 	double time;
-	time = jd + hour/1440.0 - tz/24.0;
+	time = jd + hour/1440.0 - tz/24.0; // adjust JD for the hour
 	time = (time - 2451545.0)/36525.0;
 	printf("time: %f\n", time);
 
