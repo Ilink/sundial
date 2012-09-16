@@ -53,10 +53,8 @@ int main(int argc, char *argv[]){
 	
 	if(required_arguments.lat && required_arguments.lng){
 		printf("ALL SYSTEMS ARE GO");
-		// return;
 	} else {
 		lat = 37.9232; lng = -122.2937;
-		// return;
 	}
 
 	tz = -8.0;
@@ -81,7 +79,6 @@ int main(int argc, char *argv[]){
 	printf("JD 8/31/12: %f\n", JD2);
 	double J2k = get_jd(2000, 1, 1);
 	double n = 0;
-	s_coord sun_pos = celestial(JD2, lat, lng, n, 25, -8.0);
 
 	printf("Radial dist: %f\n", sun_pos.r);
 	printf("Azimuth: %f\n", sun_pos.azimuth);
@@ -102,11 +99,7 @@ int main(int argc, char *argv[]){
 	char main_char = '@';
 
 	// Rendering loop
-	n = 0;
 	double increment = 1;
-	int j = 0;
-	double x = 1.0;
-	double y = 1.0;
 
 	FILE* file;
 	file = fopen("out.txt","a+");
@@ -128,8 +121,6 @@ int main(int argc, char *argv[]){
 	// }
 	
 	refresh();
-	// sun_pos = celestial(JD2, lat, lng, n, 8.0, tz);
-	// point_f sun_pos_point = s_coord_to_point(&sun_pos);
 	graph_info g = get_graph_info(JD2, lat, lng, 1.0, tz);
 
 	while(1) {
@@ -164,13 +155,10 @@ int main(int argc, char *argv[]){
 		mvaddch(floor(sun_pos_coord.y), floor(sun_pos_coord.x), '5');
 		// draw_filled_circle(floor(sun_pos_coord.y),floor(sun_pos_coord.x), floor(screen.height/18), '&');
 
-		j++;
-
 		// usleep(50000);
 		// usleep(50000);
 
 		refresh();
-		// sleep(30);
 	}
 	fclose(file);
 	endwin(); // clear ncurses's junk
