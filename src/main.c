@@ -157,14 +157,13 @@ int main(int argc, char *argv[]){
 		draw_line(s.midpoint, screen.height/3.0, y, x, 'x'); // this one is right, i think
 
 		mvaddch(x,y, 'o');
-		mvaddch(floor(sun_pos_coord.y), floor(sun_pos_coord.x), '5');
-		// draw_filled_circle(floor(sun_pos_coord.y),floor(sun_pos_coord.x), floor(screen.height/18), '&');
+		// mvaddch(floor(sun_pos_coord.y), floor(sun_pos_coord.x), '5');
+		draw_filled_circle(floor(sun_pos_coord.y),floor(sun_pos_coord.x), floor(screen.height/18), '&');
 
 		// usleep(50000);
 		// usleep(50000);
 
 		refresh();
-		// sleep(30);
 	}
 	fclose(file);
 	endwin(); // clear ncurses's junk
