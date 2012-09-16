@@ -52,24 +52,36 @@ int main(int argc, char *argv[]){
 	}
 	
 	if(required_arguments.lat && required_arguments.lng){
-		return;
+		printf("ALL SYSTEMS ARE GO");
+		// return;
 	} else {
-		return;
+		lat = 37.9232; lng = -122.2937;
+		// return;
 	}
 
-
-	lat = 37.9232; lng = -122.2937; tz = -8.0;
+	tz = -8.0;
 	remove("out.txt");
 	remove("shadow.txt");
 	remove("shadow2.txt");
 	remove("scaling.txt");
 	remove("ticks.txt");
+	remove("time.txt");
 
-	double JD2 = get_jd(2012, 8, 31);
+	time_t rawtime;
+	struct tm *ptm;
+
+	time(&rawtime);
+	ptm = localtime(&rawtime);
+
+	int year = 1900 + ptm->tm_year;
+	int day = ptm->tm_mday;
+	int month = ptm->tm_mon+1;
+
+	double JD2 = get_jd(year, month, day);
 	printf("JD 8/31/12: %f\n", JD2);
 	double J2k = get_jd(2000, 1, 1);
 	double n = 0;
-	s_coord sun_pos = celestial(JD2, 37.9232, -122.2937, n, 25, -8.0);
+	s_coord sun_pos = celestial(JD2, lat, lng, n, 25, -8.0);
 
 	printf("Radial dist: %f\n", sun_pos.r);
 	printf("Azimuth: %f\n", sun_pos.azimuth);
@@ -116,7 +128,7 @@ int main(int argc, char *argv[]){
 	}
 	
 	refresh();
-	sun_pos = celestial(JD2, lat, lng, n, 25, tz);
+	sun_pos = celestial(JD2, lat, lng, n, 8.0, tz);
 	point_f sun_pos_point = s_coord_to_point(&sun_pos);
 	graph_info g = get_graph_info(JD2, lat, lng, 1.0, tz);
 
@@ -128,7 +140,7 @@ int main(int argc, char *argv[]){
 		double half_width = screen.width / 2.0;
 		double y_midpoint = floor(screen.height/3.0);
 
-		sun_pos = celestial(JD2, lat, lng, n, 25, tz);
+		sun_pos = celestial(JD2, lat, lng, n, 12, tz);
 		n+=increment;
 		if(n > 24*60) n = 0.01;
 
@@ -149,14 +161,16 @@ int main(int argc, char *argv[]){
 		draw_line(s.midpoint, screen.height/3.0, y, x, 'x'); // this one is right, i think
 
 		mvaddch(x,y, 'o');
-		// mvaddch(floor(sun_pos_coord.y), floor(sun_pos_coord.x), '5');
-		draw_filled_circle(floor(sun_pos_coord.y),floor(sun_pos_coord.x), floor(screen.height/18), '&');
+		mvaddch(floor(sun_pos_coord.y), floor(sun_pos_coord.x), '5');
+		// draw_filled_circle(floor(sun_pos_coord.y),floor(sun_pos_coord.x), floor(screen.height/18), '&');
 
 		j++;
 
 		usleep(500);
-		// usleep(5000);
+		// usleep(50000);
+
 		refresh();
+		// sleep(30);
 	}
 	fclose(file);
 	endwin(); // clear ncurses's junk

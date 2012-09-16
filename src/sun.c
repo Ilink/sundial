@@ -203,15 +203,21 @@ double calc_eq_time(double t){
 }
 
 s_coord celestial(double jd, double lat, double lng, double increment, double hour, double tz){
+	// FILE *file;
+	// file = fopen("time2.txt","a+");
+	
+	// hour = increment;
 	if(hour == 25){
 		hour = get_ut();
-		hour = get_local()+increment;
+		hour = get_local();
+		// hour = get_local()+increment;
 	} else {
 		hour += increment;
 	}
+	hour = 600.0;
 	
 	// hour = 12;
-	printf("Hour: %f\n", hour);
+	printf("HOUR: %f\n", hour);
 	// double tz = -8.0; // todo: un-hardcode
 
 	double j2k = get_jd(2000, 1, 1);
@@ -219,6 +225,8 @@ s_coord celestial(double jd, double lat, double lng, double increment, double ho
 	time = jd + hour/1440.0 - tz/24.0;
 	time = (time - 2451545.0)/36525.0;
 	printf("time: %f\n", time);
+
+	// fprintf(file, "jd: %f\thour: %f\t\n", jd, hour);
 
 	double eqtime = calc_eq_time(time);
 	printf("eqtime: %f\n", eqtime);
