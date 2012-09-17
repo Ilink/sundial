@@ -104,10 +104,9 @@ int main(int argc, char *argv[]){
 	// 	exit(-1);
 	// }
 
-	graph_info g;
-	g.midpoint = 10;
+	graph_info g = get_graph_info(JD2, lat, lng, 1, tz);
 	double n = 0;
-	double increment = 1;
+	double increment = 0;
 	while(1) {
 		clear();
 

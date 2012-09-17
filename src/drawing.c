@@ -163,6 +163,10 @@ scale_info scale_sun_pos(point_f* coord, double midpoint){
 	return s;
 }
 
+/*
+This is pretty slow. Is O(N), could be Log(n) without too much effort.
+However, it is only used once.
+*/
 graph_info get_graph_info(double jd, double lat, double lng, double precision, double tz){
 	double midpoint;	
 	int n=0;
