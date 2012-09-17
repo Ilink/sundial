@@ -63,6 +63,10 @@ int main(int argc, char *argv[]){
 	remove("scaling.txt");
 	remove("ticks.txt");
 	remove("time.txt");
+	remove("JD.txt");
+
+	FILE* file;
+	file = fopen("out.txt","a+");
 
 	time_t rawtime;
 	struct tm *ptm;
@@ -75,8 +79,10 @@ int main(int argc, char *argv[]){
 	int day = ptm->tm_mday;
 	int month = ptm->tm_mon+1;
 
-	double JD2 = get_jd(year, month, day);
-	double J2k = get_jd(2000, 1, 1);
+	fprintf(file, "year: %i\t day: %i\t month: %i\n", year, day, month);
+
+	double JD = get_jd(year, month, day);
+	fprintf(file, "JD: %f\n\n", JD);
 
 	// Initialize ncurses
 	initscr();
@@ -85,9 +91,6 @@ int main(int argc, char *argv[]){
 	cbreak();
 	keypad(stdscr, TRUE);
 	curs_set(0);
-
-	FILE* file;
-	file = fopen("out.txt","a+");
 
 	// Kinda useless thread setup!
 	struct Arg* args = malloc(sizeof args);
@@ -104,17 +107,17 @@ int main(int argc, char *argv[]){
 	// 	exit(-1);
 	// }
 
-	graph_info g = get_graph_info(JD2, lat, lng, 1, tz);
+	graph_info g = get_graph_info(JD, lat, lng, 1, tz);
 	double n = 0;
-	double increment = 0;
+	double increment = 1;
 	while(1) {
 		clear();
 
 		screen_info screen = get_screen_info(); // allows resizing of the window by keeping this up to date
 		double half_width = screen.width / 2.0;
 		double y_midpoint = floor(screen.height/3.0);
-		s_coord sun_pos = celestial(JD2, lat, lng, n, 12, 8.0);
-		fprintf(file, "azi: %f\t ele: %f\t", sun_pos.azimuth, sun_pos.elevation);
+		s_coord sun_pos = celestial(JD, lat, lng, n, 100.0, tz);
+		fprintf(file, "jd: %f\t azi: %f\t ele: %f\t", JD, sun_pos.azimuth, sun_pos.elevation);
 
 		n+=increment;
 		if(n > 24*60) n = 0;

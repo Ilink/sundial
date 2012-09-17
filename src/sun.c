@@ -69,16 +69,23 @@ double au_to_km(double au){
 
 // uses UT, not local time
 double get_jd(int year, int month, int day){
+	FILE* file = fopen("JD.txt", "a+");
 	double UT;
 	UT = get_ut();
+	
 
 	time_t t = time(NULL);
 	struct tm *now = localtime(&t);
-	int day_of_year = now->tm_yday;
+	// int day = now->tm_mday;
 
 	int a = floor(year/100.0);
 	int b = 2 - a + floor(a/4.0);
-	return floor(365.25*(year + 4716))+ floor(30.6001*(month+1))+day+b-1524.5;
+	
+	double jd = floor(365.25*(year + 4716))+ floor(30.6001*(month+1))+day+b-1524.5;
+	fprintf(file, "a: %i\t b: %i\t day: %i\t ut: %f\t jd: %f\n", a, b, day, UT, jd);
+	fclose(file);
+
+	return jd;
 }
 
 int int_part(double x){
@@ -220,15 +227,15 @@ s_coord celestial(double jd, double lat, double lng, double increment, double ho
 		hour += increment;
 	}
 
-	// hour = get_local();
+	// hour = 12;
 	// hour = 167.65;
 	
 	// hour = 12;
 	printf("HOUR: %f\n", hour);
 	// double tz = -8.0; // todo: un-hardcode
 
-	double j2k = get_jd(2000, 1, 1);
 	double time;
+	// todo: the hour adjustment is wrong
 	time = jd + hour/1440.0 - tz/24.0; // adjust JD for the hour
 	time = (time - 2451545.0)/36525.0;
 	fprintf(file, "time: %f\n", time);
