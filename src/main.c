@@ -116,11 +116,12 @@ int main(int argc, char *argv[]){
 		screen_info screen = get_screen_info(); // allows resizing of the window by keeping this up to date
 		double half_width = screen.width / 2.0;
 		double y_midpoint = floor(screen.height/3.0);
-		s_coord sun_pos = celestial(JD, lat, lng, n, 100.0, tz);
-		fprintf(file, "jd: %f\t azi: %f\t ele: %f\t", JD, sun_pos.azimuth, sun_pos.elevation);
+		s_coord sun_pos = celestial(JD, lat, lng ,0.0, 720.0, tz);
+		
 
 		n+=increment;
 		if(n > 24*60) n = 0;
+		fprintf(file, "azi: %f\t ele: %f\t n: %f\n", sun_pos.azimuth, sun_pos.elevation, n);
 
 		double midpoint = g.midpoint;
 		point_f sun_pos_coord = s_coord_to_point(&sun_pos);
@@ -140,7 +141,7 @@ int main(int argc, char *argv[]){
 		// mvaddch(floor(sun_pos_coord.y), floor(sun_pos_coord.x), '5');
 		draw_filled_circle(floor(sun_pos_coord.y),floor(sun_pos_coord.x), floor(screen.height/18), '&');
 
-		// usleep(50000);
+		usleep(5000);
 		refresh();
 	}
 	fclose(file);
