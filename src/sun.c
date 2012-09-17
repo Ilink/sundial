@@ -221,17 +221,19 @@ s_coord celestial(double jd, double lat, double lng, double increment, double ho
 	// hour = increment;
 	if(hour == 25){
 		hour = get_ut();
-		hour = get_local();
+		hour = get_local()*60;
 		// hour = get_local()+increment;
 	} else {
 		hour += increment;
 	}
 
+	// hour = 720.0;
+
 	// hour = 12;
 	// hour = 167.65;
 	
 	// hour = 12;
-	printf("HOUR: %f\n", hour);
+	fprintf(file, "HOURR: %f\n", hour);
 	// double tz = -8.0; // todo: un-hardcode
 
 	double time;
