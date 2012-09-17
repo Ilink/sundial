@@ -165,18 +165,21 @@ double calc_declination(double t){
 }
 
 double calc_eq_time(double t){
+	FILE *file = fopen("time.txt", "a+");
 	double epsilon = calc_obliq_corr(t);
-	printf("epsilon: %f\n", epsilon);
+	fprintf(file, "epsilon: %f\n", epsilon);
 	double l = calc_mean_lng_sun(t);
-	printf("l: %f\n", l);
+	fprintf(file, "l: %f\n", l);
 	double e = 0.016708634 - t * (0.000042037 + 0.0000001267 * t);
-	printf("e: %f\n", e);
+	fprintf(file, "e: %f\n", e);
 	double m = calc_mean_anomaly_sun(t);
-	printf("m: %f\n", m);
+	fprintf(file, "m: %f\n", m);
 
 
 	double y = tan(deg_to_rad(epsilon)/2.0);
+	fprintf(file, "y: %f\n", deg_to_rad(epsilon)/2.0);
 	y *= y;
+	fprintf(file, "y: %f\n", y);
 
 	double test = 2.0 * deg_to_rad(l);
 	double sin2l0 = sin(test);
@@ -186,11 +189,11 @@ double calc_eq_time(double t){
 	double sin4l0 = sin(4.0 * deg_to_rad(l));
 	double sin2m  = sin(2.0 * deg_to_rad(m));
 
-	printf("sin2l0: %f\n", sin2l0);
-	printf("sinm: %f\n", sinm);
-	printf("cos2l0: %f\n", cos2l0);
-	printf("sin4l0: %f\n", sin4l0);
-	printf("sin2m: %f\n", sin2m);
+	fprintf(file, "sin2l0: %f\n", sin2l0);
+	fprintf(file, "sinm: %f\n", sinm);
+	fprintf(file, "cos2l0: %f\n", cos2l0);
+	fprintf(file, "sin4l0: %f\n", sin4l0);
+	fprintf(file, "sin2m: %f\n", sin2m);
 
 	sin2l0 = -0.5486700881092892;
 	sinm = -0.8678243339510023;
@@ -199,13 +202,15 @@ double calc_eq_time(double t){
 	sin2m = 0.8623937246406765;
 
 	double Etime = y * sin2l0 - 2.0 * e * sinm + 4.0 * e * y * sinm * cos2l0 - 0.5 * y * y * sin4l0 - 1.25 * e * e * sin2m;
+	fprintf(file, "etime: %f\t", sin2l0);
+	fclose(file);
 	return rad_to_deg(Etime)*4.0; // in minutes of time
 }
 
 s_coord celestial(double jd, double lat, double lng, double increment, double hour, double tz){
 	FILE *file;
 	file = fopen("time.txt","a+");
-	
+
 	// hour = increment;
 	if(hour == 25){
 		hour = get_ut();
@@ -226,12 +231,12 @@ s_coord celestial(double jd, double lat, double lng, double increment, double ho
 	double time;
 	time = jd + hour/1440.0 - tz/24.0; // adjust JD for the hour
 	time = (time - 2451545.0)/36525.0;
-	printf("time: %f\n", time);
+	fprintf(file, "time: %f\n", time);
 
 	fprintf(file, "jd: %f\thour: %f\t\n", jd, hour);
 
 	double eqtime = calc_eq_time(time);
-	printf("eqtime: %f\n", eqtime);
+	fprintf(file, "eqtime: %f\n", eqtime);
 
 	double delta = calc_declination(time);
 	printf("delta (decl): %f\n", delta);
@@ -243,22 +248,22 @@ s_coord celestial(double jd, double lat, double lng, double increment, double ho
 	while(true_solar_time > 1440) true_solar_time -= 1440.0;
 	double ha = true_solar_time / 4.0 - 180.0;
 	if(ha < -180) ha += 360.0;
-	printf("true solar time: %f\n", true_solar_time);
+	fprintf(file, "true solar time: %f\n", true_solar_time);
 
 	printf("ha: %f\n", ha);
 
 	double r = calc_sun_rad_vector(time);
 	double ha_rad = deg_to_rad(ha);
-	printf("ha_rad: %f\n", ha_rad);
+	fprintf(file, "ha_rad: %f\n", ha_rad);
 	double cos_zenith = sin(deg_to_rad(lat)) * sin(deg_to_rad(delta)) + cos(deg_to_rad(lat)) * cos(deg_to_rad(delta)) * cos(ha_rad);
 
-	printf("(pre) cos zenith: %f\n", cos_zenith);
+	fprintf(file, "(pre) cos zenith: %f\n", cos_zenith);
 
 	if(cos_zenith > 1.0) cos_zenith = 1.0;
 	else if (cos_zenith < -1.0) cos_zenith = -1.0;
 	double zenith = rad_to_deg(acos(cos_zenith));
 	printf("cos zenith: %f\n", cos_zenith);
-	printf("zenith: %f\n", zenith);
+	fprintf(file, "zenith: %f\n", zenith);
 
 	double azimuth_denom = cos(deg_to_rad(lat))*sin(deg_to_rad(zenith));
 	double azimuth;

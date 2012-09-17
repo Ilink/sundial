@@ -29,7 +29,7 @@ static struct Required_arguments {
 
 int main(int argc, char *argv[]){
 	int c;
-	double lat, lng, tz;
+	double lat; double lng; double tz;
 	while(1){
 		int option_index = 0;
 		c = getopt_long (argc, argv, opt_string, long_options, &option_index);
@@ -53,13 +53,10 @@ int main(int argc, char *argv[]){
 	
 	if(required_arguments.lat && required_arguments.lng){
 		printf("ALL SYSTEMS ARE GO");
-		// return;
 	} else {
 		lat = 37.9232; lng = -122.2937;
-		// return;
 	}
 
-	tz = -8.0;
 	remove("out.txt");
 	remove("shadow.txt");
 	remove("shadow2.txt");
@@ -73,23 +70,13 @@ int main(int argc, char *argv[]){
 	time(&rawtime);
 	ptm = localtime(&rawtime);
 
+	tz = -8.0;
 	int year = 1900 + ptm->tm_year;
 	int day = ptm->tm_mday;
 	int month = ptm->tm_mon+1;
 
 	double JD2 = get_jd(year, month, day);
-	printf("JD 8/31/12: %f\n", JD2);
 	double J2k = get_jd(2000, 1, 1);
-	double n = 0;
-	s_coord sun_pos;
-	// sun_pos = celestial(JD2, lat, lng, n, 25, -8.0);
-
-	printf("Radial dist: %f\n", sun_pos.r);
-	printf("Azimuth: %f\n", sun_pos.azimuth);
-	printf("Elevation: %f\n", sun_pos.elevation);
-
-	printf("Scaled Azimuth: %f\n", sun_pos.azimuth);
-	printf("Scaled Elevation: %f\n", sun_pos.elevation);
 
 	// Initialize ncurses
 	initscr();
@@ -99,18 +86,10 @@ int main(int argc, char *argv[]){
 	keypad(stdscr, TRUE);
 	curs_set(0);
 
-	// test symbol
-	char main_char = '@';
-
-	// Rendering loop
-	n = 0;
-	double increment = 1;
-
 	FILE* file;
 	file = fopen("out.txt","a+");
 
 	// Kinda useless thread setup!
-
 	struct Arg* args = malloc(sizeof args);
 	args->x_offset = 0;
 	args->y_offset = 0;
@@ -124,26 +103,26 @@ int main(int argc, char *argv[]){
 	// 	printf("ERROR; return code from pthread_create() is %d\n", rc);
 	// 	exit(-1);
 	// }
-	
-	refresh();
-	graph_info g = get_graph_info(JD2, lat, lng, 1.0, tz);
 
+	graph_info g;
+	g.midpoint = 10;
+	double n = 0;
+	double increment = 1;
 	while(1) {
 		clear();
 
-		screen_info screen = get_screen_info();
-
+		screen_info screen = get_screen_info(); // allows resizing of the window by keeping this up to date
 		double half_width = screen.width / 2.0;
 		double y_midpoint = floor(screen.height/3.0);
+		s_coord sun_pos = celestial(JD2, lat, lng, n, 12, 8.0);
+		fprintf(file, "azi: %f\t ele: %f\t", sun_pos.azimuth, sun_pos.elevation);
 
-		sun_pos = celestial(JD2, lat, lng, n, 12, tz);
 		n+=increment;
-		if(n > 24*60) n = 0.01;
+		if(n > 24*60) n = 0;
 
 		double midpoint = g.midpoint;
-		scale_info s;
 		point_f sun_pos_coord = s_coord_to_point(&sun_pos);
-		s = scale_sun_pos(&sun_pos_coord, g.midpoint);
+		scale_info s = scale_sun_pos(&sun_pos_coord, g.midpoint);
 
 		double shadow_length = screen.height/3.0;
 		point_f spoint = shadow_point(&sun_pos_coord, shadow_length, s.midpoint, y_midpoint);
@@ -151,21 +130,18 @@ int main(int argc, char *argv[]){
 		int x = ceil(spoint.y);
 		int y = ceil(spoint.x);
 		
-		fprintf(file, "sc shadow x: %i\t", y);
-		fprintf(file, "sc shadow y: %i\n", x);
+		fprintf(file, "sc shadow x: %i sc shadow y: %i\n", y, x);
 		
-		draw_line(s.midpoint, screen.height/3.0, y, x, 'x'); // this one is right, i think
+		draw_line(s.midpoint, screen.height/3.0, y, x, 'x');
 
 		mvaddch(x,y, 'o');
 		// mvaddch(floor(sun_pos_coord.y), floor(sun_pos_coord.x), '5');
 		draw_filled_circle(floor(sun_pos_coord.y),floor(sun_pos_coord.x), floor(screen.height/18), '&');
 
 		// usleep(50000);
-		// usleep(50000);
-
 		refresh();
 	}
 	fclose(file);
 	endwin(); // clear ncurses's junk
-	pthread_exit(NULL);
+	// pthread_exit(NULL);
 }

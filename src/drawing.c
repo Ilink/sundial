@@ -128,7 +128,12 @@ point_f shadow_point(point_f* sun_pos, int shadow_length, double midpoint, doubl
 }
 
 scale_info scale_sun_pos(point_f* coord, double midpoint){
+	FILE *file; 
+	file = fopen("out.txt","a+");  
+	
 	screen_info screen = get_screen_info();
+
+	fprintf(file,"unscaled x: %f\t unscaled y: %f \n", coord->y, coord->x); 
 
 	double y_ratio = screen.height / 500.0;
 	double x_ratio = screen.width / 1000.0;
@@ -142,8 +147,7 @@ scale_info scale_sun_pos(point_f* coord, double midpoint){
 	coord->x = -1*(coord->x * x_ratio) + floor(true_offset);
 	coord->y = -1*(coord->y * y_ratio) + floor(half_height/3);
 
-	FILE *file; 
-	file = fopen("out.txt","a+");  
+	
 	fprintf(file,"midpoint (x): %f\t", midpoint); 
 	fprintf(file,"scaled x: %f\t", coord->y); 
 	fprintf(file,"scaled y: %f\n", coord->x); 
