@@ -214,30 +214,22 @@ double calc_eq_time(double t){
 	return rad_to_deg(Etime)*4.0; // in minutes of time
 }
 
-s_coord celestial(double jd, double lat, double lng, double increment, double hour, double tz){
+s_coord celestial(double jd, double lat, double lng, double hour, double tz){
 	FILE *file;
 	file = fopen("time.txt","a+");
 
-	// hour = increment;
-	if(hour == 25){
-		hour = get_ut();
-		hour = get_local()*60;
-		// hour = get_local()+increment;
-	} else {
-		hour += increment;
-	}
+	// // hour = increment;
+	// if(hour == 25){
+	// 	hour = get_ut();
+	// 	hour = get_local()*60;
+	// 	// hour = get_local()+increment;
+	// } else {
+	// 	hour += increment;
+	// }
 
-	// hour = 720.0;
-
-	// hour = 12;
-	// hour = 167.65;
-	
-	// hour = 12;
 	fprintf(file, "HOURR: %f\n", hour);
-	// double tz = -8.0; // todo: un-hardcode
 
 	double time;
-	// todo: the hour adjustment is wrong
 	time = jd + hour/1440.0 - tz/24.0; // adjust JD for the hour
 	time = (time - 2451545.0)/36525.0;
 	fprintf(file, "time: %f\n", time);

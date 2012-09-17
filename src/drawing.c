@@ -169,8 +169,8 @@ However, it is only used once.
 */
 graph_info get_graph_info(double jd, double lat, double lng, double precision, double tz){
 	double midpoint;	
-	int n=0;
-	double highest=0;
+	double hour = 5.5;
+	double highest = 0;
 	s_coord graph;
 	graph_info g;
 	int first = 1;
@@ -179,10 +179,10 @@ graph_info get_graph_info(double jd, double lat, double lng, double precision, d
 	file = fopen("graph_info.txt","w+");
 
 	while(1){
-		graph = celestial(jd, lat, lng, n, 5.5, tz);
+		graph = celestial(jd, lat, lng, hour, tz);
 		if(first){
 			first = 0;
-			highest =  graph.elevation;
+			highest = graph.elevation;
 		}
 
 		fprintf(file, "elevation: %f\t", graph.elevation);
@@ -198,12 +198,10 @@ graph_info get_graph_info(double jd, double lat, double lng, double precision, d
 			fprintf(file, "highest: %f\n", highest);
 			break;
 		}
-		n += precision;
-		// usleep(100);
+		hour += precision;
 	}
 
 	fclose(file);
-
 	return g;
 }
 
