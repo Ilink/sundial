@@ -113,7 +113,7 @@ int main(int argc, char *argv[]){
 	while(1) {
 		clear();
 
-		double hour = get_local();
+		double hour = get_local()*60;
 
 		screen_info screen = get_screen_info(); // allows resizing of the window by keeping this up to date
 		double half_width = screen.width / 2.0;
