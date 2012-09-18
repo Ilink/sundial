@@ -109,11 +109,12 @@ int main(int argc, char *argv[]){
 
 	graph_info g = get_graph_info(JD, lat, lng, 1, tz);
 	double n = 0;
-	double increment = 1;
+	double increment = 0.1;
 	while(1) {
 		clear();
 
-		double hour = get_local()*60;
+		double hour = get_local()*60 + n;
+		fprintf(file, "hour (local*60) %f\t", hour);
 
 		screen_info screen = get_screen_info(); // allows resizing of the window by keeping this up to date
 		double half_width = screen.width / 2.0;
