@@ -7,7 +7,8 @@
 #include <sys/ioctl.h>
 #include <unistd.h>
 #include <getopt.h>
-// #include <string.h>
+#include <GeoIP.h>
+
 #include "types.h"
 #include "sun.h"
 #include "drawing.h"

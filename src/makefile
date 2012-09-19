@@ -1,6 +1,6 @@
 CC=gcc
 BUILD_DIR = ../build
-CFLAGS = -I/usr/include/ncurses -lncurses -g -lm
+CFLAGS = -I/usr/include/ncurses -lncurses -I/usr/include/libGeoIP -g -lm
 # CFLAGS = -I/usr/local/include/ncurses -lncurses
 
 sundial: main.o drawing.o sun.o types.o util.o
