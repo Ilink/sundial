@@ -20,7 +20,7 @@ typedef struct {
 typedef struct {
 	double lat;
 	double lng;
-} ecliptic_coord;
+} geo_coord;
 
 typedef struct {
 	double azimuth;
