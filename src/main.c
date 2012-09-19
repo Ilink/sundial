@@ -114,7 +114,7 @@ int main(int argc, char *argv[]){
 	while(1) {
 		clear();
 
-		double hour = get_local()*60 + n;
+		double hour = get_local();
 		fprintf(file, "hour (local*60) %f\t", hour);
 
 		screen_info screen = get_screen_info(); // allows resizing of the window by keeping this up to date

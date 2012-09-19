@@ -44,14 +44,7 @@ double get_local(){
 	double min = ptm->tm_min;
 	double hour = ptm->tm_hour;
 
-	hour-=12;
-
 	double time = hour*60.0 + min + sec/60.0;
-
-	printf("seconds: %f\n", sec);
-	printf("minutes: %f\n", min);
-	printf("hours: %f\n", hour);
-
 	return time;
 }
 
