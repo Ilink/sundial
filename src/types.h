@@ -3,7 +3,7 @@
 
 extern double const PI;
 extern double const jd2k;
-#define printf(fmt, ...) (0) // shouldnt be printing to the screen with ncurses going on
+// #define printf(fmt, ...) (0) // shouldnt be printing to the screen with ncurses going on
 // #define fprintf(fmt,...) (0)
 // typedef enum { false, true } bool;
 
@@ -16,11 +16,6 @@ typedef struct {
 	double x; 
 	double y;
 } point_f;
-
-typedef struct {
-	double lat;
-	double lng;
-} geo_coord;
 
 typedef struct {
 	double azimuth;

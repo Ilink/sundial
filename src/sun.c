@@ -1,4 +1,4 @@
-#include <ncurses.h>
+#include <ncurses/ncurses.h>
 #include <stdio.h>
 #include <math.h>
 #include <time.h>
@@ -125,10 +125,10 @@ double calc_sun_app_lng(double t){
 	double o = l0 + c;
 	double omega = 125.04 - 1934.136 * t;
 	double lambda = o - 0.00569 - 0.00478 * sin(deg_to_rad(omega));
-	printf("app_lng l0: %f\n", l0);
-	printf("app_lng c: %f\n", c);
-	printf("app_lng o: %f\n", o);
-	printf("app_lng omega: %f\n", omega);
+//printf("app_lng l0: %f\n", l0);
+//printf("app_lng c: %f\n", c);
+//printf("app_lng o: %f\n", o);
+//printf("app_lng omega: %f\n", omega);
 	return lambda;
 }
 
@@ -154,8 +154,8 @@ double calc_declination(double t){
 	double e = calc_obliq_corr(t); //todo check me
 	double lambda = calc_sun_app_lng(t); // check meeeeee
 
-	printf("decl e: %f\n", e);
-	printf("decl lambda: %f\n", lambda);
+//printf("decl e: %f\n", e);
+//printf("decl lambda: %f\n", lambda);
 
 	double sint = sin(deg_to_rad(e)) * sin(deg_to_rad(lambda));
 	double theta = rad_to_deg(asin(sint));
@@ -233,7 +233,7 @@ s_coord celestial(double jd, double lat, double lng, double hour, double tz){
 	fprintf(file, "eqtime: %f\n", eqtime);
 
 	double delta = calc_declination(time);
-	printf("delta (decl): %f\n", delta);
+//printf("delta (decl): %f\n", delta);
 	double solar_time_fix = eqtime + 4.0 * lng - 60.0 * tz;
 	// double true_solar_time = hour + (eqtime + 4.0 * lng - 60.0 * tz);
 	double true_solar_time = hour + solar_time_fix;
@@ -244,7 +244,7 @@ s_coord celestial(double jd, double lat, double lng, double hour, double tz){
 	if(ha < -180) ha += 360.0;
 	fprintf(file, "true solar time: %f\n", true_solar_time);
 
-	printf("ha: %f\n", ha);
+//printf("ha: %f\n", ha);
 
 	double r = calc_sun_rad_vector(time);
 	double ha_rad = deg_to_rad(ha);
@@ -256,29 +256,29 @@ s_coord celestial(double jd, double lat, double lng, double hour, double tz){
 	if(cos_zenith > 1.0) cos_zenith = 1.0;
 	else if (cos_zenith < -1.0) cos_zenith = -1.0;
 	double zenith = rad_to_deg(acos(cos_zenith));
-	printf("cos zenith: %f\n", cos_zenith);
+//printf("cos zenith: %f\n", cos_zenith);
 	fprintf(file, "zenith: %f\n", zenith);
 
 	double azimuth_denom = cos(deg_to_rad(lat))*sin(deg_to_rad(zenith));
 	double azimuth;
 	if(fabs(azimuth_denom) > 0.001){
-		printf("%s\n", "azi denon great than 0.001");
+	//printf("%s\n", "azi denon great than 0.001");
 		double azimuth_rad = ((sin(deg_to_rad(lat)) * cos(deg_to_rad(zenith))) - sin(deg_to_rad(delta))) / azimuth_denom;
 		if(fabs(azimuth_rad)>1.0) {
 			if(azimuth_rad < 0.0) azimuth_rad = -1.0;
 			else azimuth_rad = 1.0;
 		}
 		azimuth = 180.0 - rad_to_deg(acos(azimuth_rad));
-		printf("azrad: %f\n", azimuth_rad);
+	//printf("azrad: %f\n", azimuth_rad);
 		if(ha > 0.0) azimuth = -azimuth;
 	} else {
-		printf("%s\n", "azi denon less than 0.001");
+	//printf("%s\n", "azi denon less than 0.001");
 		if(lat > 0.0) azimuth = 180.0;
 		else azimuth = 0.0;
 	}
 	if (azimuth < 0) azimuth += 360.0;
 
-	printf("azimuth denom %f\n", azimuth_denom);
+//printf("azimuth denom %f\n", azimuth_denom);
 
 	double ref_corr;
 	double eo_ele = 90.0 - zenith;
@@ -295,13 +295,13 @@ s_coord celestial(double jd, double lat, double lng, double hour, double tz){
 		}
 		ref_corr /= 3600.0;
 	}
-	printf("zenith %f\n", zenith);
+//printf("zenith %f\n", zenith);
 	double solar_zenith = zenith - ref_corr;
-	printf("solar zenith %f\n", solar_zenith);
-	printf("Refraction correction%f\n", ref_corr);
+//printf("solar zenith %f\n", solar_zenith);
+//printf("Refraction correction%f\n", ref_corr);
 
 	s_coord coord;
-	printf("Azimuth: %f\n", azimuth);
+//printf("Azimuth: %f\n", azimuth);
 	coord.azimuth = azimuth;
 	coord.r = r;
 	double el = floor((90.0-solar_zenith)*100+0.5)/100.0;

@@ -1,4 +1,4 @@
-#include <ncurses.h>
+#include <ncurses/ncurses.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
 #include <stdio.h>
@@ -146,7 +146,7 @@ scale_info scale_sun_pos(point_f* coord, double midpoint){
 
 	coord->x = -1*(coord->x * x_ratio) + floor(true_offset);
 	coord->y = -1*(coord->y * y_ratio) + floor(half_height/3);
-
+	// coord->y = -1*(coord->y * y_ratio) + floor(half_height);
 	
 	fprintf(file,"midpoint (x): %f\t", midpoint); 
 	fprintf(file,"scaled x: %f\t", coord->y); 

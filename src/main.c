@@ -1,4 +1,4 @@
-#include <ncurses.h>
+#include <ncurses/ncurses.h>
 #include <stdio.h>
 #include <math.h>
 #include <time.h>
@@ -7,8 +7,8 @@
 #include <sys/ioctl.h>
 #include <unistd.h>
 #include <getopt.h>
-#include <GeoIP.h>
 
+#include "get_loc.h"
 #include "types.h"
 #include "sun.h"
 #include "drawing.h"
@@ -51,14 +51,25 @@ int main(int argc, char *argv[]){
 				break;
 		}
 	}
-	
+
+	remove("out.txt");
+	FILE* file;
+	file = fopen("out.txt","a+");
+
+	geo_coord loc;
 	if(required_arguments.lat && required_arguments.lng){
 		printf("ALL SYSTEMS ARE GO");
 	} else {
+		const char ip[50] = "98.210.146.154";
+
+		fprintf(file, "IP: %s", ip);
+		// loc = get_loc(ip);
+		loc.lat = 37.9232;
+		loc.lng = -122.2937;
 		lat = 37.9232; lng = -122.2937;
 	}
 
-	remove("out.txt");
+	
 	remove("shadow.txt");
 	remove("shadow2.txt");
 	remove("scaling.txt");
@@ -66,8 +77,7 @@ int main(int argc, char *argv[]){
 	remove("time.txt");
 	remove("JD.txt");
 
-	FILE* file;
-	file = fopen("out.txt","a+");
+	
 
 	time_t rawtime;
 	struct tm *ptm;
@@ -137,10 +147,11 @@ int main(int argc, char *argv[]){
 		int y = ceil(spoint.x);
 		
 		fprintf(file, "sc shadow x: %i sc shadow y: %i\n", y, x);
+		fprintf(file, "x: %f\t y: %f\n", floor(sun_pos_coord.y), floor(sun_pos_coord.x));
 		
 		draw_line(s.midpoint, screen.height/3.0, y, x, 'x');
 
-		mvaddch(x,y, 'o');
+		mvaddch(ceil(x),ceil(y), 'o');
 		// mvaddch(floor(sun_pos_coord.y), floor(sun_pos_coord.x), '5');
 		draw_filled_circle(floor(sun_pos_coord.y),floor(sun_pos_coord.x), floor(screen.height/18), '&');
 
