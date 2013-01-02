@@ -4,7 +4,7 @@
 extern double const PI;
 extern double const jd2k;
 // #define printf(fmt, ...) (0) // shouldnt be printing to the screen with ncurses going on
-// #define fprintf(fmt,...) (0)
+// #define // fprintf(fmt,...) (0)
 // typedef enum { false, true } bool;
 
 typedef struct {
@@ -39,5 +39,10 @@ typedef struct{
 	double x_scale;
 	double y_scale;
 } scale_info;
+
+typedef struct {
+	double lat;
+	double lng;
+} geo_coord;
 
 #endif

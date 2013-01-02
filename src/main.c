@@ -8,7 +8,7 @@
 #include <unistd.h>
 #include <getopt.h>
 
-#include "get_loc.h"
+// #include "get_loc.h"
 #include "types.h"
 #include "sun.h"
 #include "drawing.h"
@@ -52,9 +52,9 @@ int main(int argc, char *argv[]){
 		}
 	}
 
-	remove("out.txt");
+	remove("../log/out.txt");
 	FILE* file;
-	file = fopen("out.txt","a+");
+	file = fopen("../log/out.txt","a+");
 
 	geo_coord loc;
 	if(required_arguments.lat && required_arguments.lng){
@@ -62,22 +62,19 @@ int main(int argc, char *argv[]){
 	} else {
 		const char ip[50] = "98.210.146.154";
 
-		fprintf(file, "IP: %s", ip);
+		// fprintf(file, "IP: %s", ip);
 		// loc = get_loc(ip);
-		loc.lat = 37.9232;
-		loc.lng = -122.2937;
-		lat = 37.9232; lng = -122.2937;
+		loc.lat = 37.871592;
+		loc.lng = -122.272747;
+		lat = 37.871592; lng = -122.2937;
 	}
 
-	
-	remove("shadow.txt");
-	remove("shadow2.txt");
-	remove("scaling.txt");
-	remove("ticks.txt");
-	remove("time.txt");
-	remove("JD.txt");
-
-	
+	remove("../log/shadow.txt");
+	remove("../log/shadow2.txt");
+	remove("../log/scaling.txt");
+	remove("../log/ticks.txt");
+	remove("../log/time.txt");
+	remove("../log/JD.txt");
 
 	time_t rawtime;
 	struct tm *ptm;
@@ -90,10 +87,10 @@ int main(int argc, char *argv[]){
 	int day = ptm->tm_mday;
 	int month = ptm->tm_mon+1;
 
-	fprintf(file, "year: %i\t day: %i\t month: %i\n", year, day, month);
+	// fprintf(file, "year: %i\t day: %i\t month: %i\n", year, day, month);
 
 	double JD = get_jd(year, month, day);
-	fprintf(file, "JD: %f\n\n", JD);
+	// fprintf(file, "JD: %f\n\n", JD);
 
 	// Initialize ncurses
 	initscr();
@@ -125,6 +122,7 @@ int main(int argc, char *argv[]){
 		clear();
 
 		double hour = get_local();
+		hour = 18.0 * 60.0;
 		fprintf(file, "hour (local*60) %f\t", hour);
 
 		screen_info screen = get_screen_info(); // allows resizing of the window by keeping this up to date
@@ -146,8 +144,8 @@ int main(int argc, char *argv[]){
 		int x = ceil(spoint.y);
 		int y = ceil(spoint.x);
 		
-		fprintf(file, "sc shadow x: %i sc shadow y: %i\n", y, x);
-		fprintf(file, "x: %f\t y: %f\n", floor(sun_pos_coord.y), floor(sun_pos_coord.x));
+		// fprintf(file, "sc shadow x: %i sc shadow y: %i\n", y, x);
+		// fprintf(file, "x: %f\t y: %f\n", floor(sun_pos_coord.y), floor(sun_pos_coord.x));
 		
 		draw_line(s.midpoint, screen.height/3.0, y, x, 'x');
 
