@@ -76,6 +76,12 @@ double get_jd(int year, int month, int day){
 	return jd;
 }
 
+// http://graphics.stanford.edu/~seander/bithacks.html#IntegerAbs
+unsigned int abs(int i){
+	int const mask = i >> (sizeof(int) * 8 - 1);
+	return ((i + mask) ^ mask);
+}
+
 int int_part(double x){
 	return abs(x)*((int)x >> 31) | (((0 - (int)x) >> 31) & 1);
 }
