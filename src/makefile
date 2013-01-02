@@ -12,4 +12,4 @@ sun.o: sun.c
 types.o: types.c
 
 clean: 
-	rm -f sundial main.o sun.o types.o util.o
+	rm -f sundial main.o sun.o types.o

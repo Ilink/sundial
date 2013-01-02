@@ -1,11 +1,6 @@
-#include <ncurses/ncurses.h>
 #include <stdio.h>
 #include <math.h>
 #include <time.h>
-#include <stdlib.h>
-#include <pthread.h>
-#include <sys/ioctl.h>
-#include <unistd.h>
 #include "types.h"
 #include "sun.h"
 
@@ -62,7 +57,7 @@ double au_to_km(double au){
 
 // uses UT, not local time
 double get_jd(int year, int month, int day){
-	FILE* file = fopen("../log/JD.txt", "a+");
+	// FILE* file = fopen("../log/JD.txt", "a+");
 	double UT;
 	UT = get_ut();
 	
@@ -76,7 +71,7 @@ double get_jd(int year, int month, int day){
 	
 	double jd = floor(365.25*(year + 4716))+ floor(30.6001*(month+1))+day+b-1524.5;
 	// fprintf(file, "a: %i\t b: %i\t day: %i\t ut: %f\t jd: %f\n", a, b, day, UT, jd);
-	fclose(file);
+	// fclose(file);
 
 	return jd;
 }
@@ -163,7 +158,7 @@ double calc_declination(double t){
 }
 
 double calc_eq_time(double t){
-	FILE *file = fopen("../log/time.txt", "a+");
+	// FILE *file = fopen("../log/time.txt", "a+");
 	double epsilon = calc_obliq_corr(t);
 	// fprintf(file, "epsilon: %f\n", epsilon);
 	double l = calc_mean_lng_sun(t);
@@ -201,13 +196,13 @@ double calc_eq_time(double t){
 
 	double Etime = y * sin2l0 - 2.0 * e * sinm + 4.0 * e * y * sinm * cos2l0 - 0.5 * y * y * sin4l0 - 1.25 * e * e * sin2m;
 	// fprintf(file, "etime: %f\t", sin2l0);
-	fclose(file);
+	// fclose(file);
 	return rad_to_deg(Etime)*4.0; // in minutes of time
 }
 
 s_coord get_sun_pos(double jd, double lat, double lng, double hour, double tz){
-	FILE *file;
-	file = fopen("../log/time.txt","a+");
+	// FILE *file;
+	// file = fopen("../log/time.txt","a+");
 
 	// // hour = increment;
 	// if(hour == 25){
@@ -305,6 +300,6 @@ s_coord get_sun_pos(double jd, double lat, double lng, double hour, double tz){
 	double el = floor((90.0-solar_zenith)*100+0.5)/100.0;
 	coord.elevation = el;
 
-	fclose(file);
+	// fclose(file);
 	return coord;
 }
