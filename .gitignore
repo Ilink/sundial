@@ -3,3 +3,4 @@ build
 *.o
 *.log
 log/*
+*.exe.stackdump
