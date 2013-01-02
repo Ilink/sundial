@@ -151,8 +151,8 @@ double calc_mean_anomaly_sun(double t){
 
 // returns degrees
 double calc_declination(double t){
-	double e = calc_obliq_corr(t); //todo check me
-	double lambda = calc_sun_app_lng(t); // check meeeeee
+	double e = calc_obliq_corr(t);
+	double lambda = calc_sun_app_lng(t);
 
 //printf("decl e: %f\n", e);
 //printf("decl lambda: %f\n", lambda);
@@ -160,8 +160,6 @@ double calc_declination(double t){
 	double sint = sin(deg_to_rad(e)) * sin(deg_to_rad(lambda));
 	double theta = rad_to_deg(asin(sint));
 	return theta;
-
-	// return rad_to_deg(asin(sin(deg_to_rad(e)) * sin(deg_to_rad(lambda))));
 }
 
 double calc_eq_time(double t){
@@ -207,7 +205,7 @@ double calc_eq_time(double t){
 	return rad_to_deg(Etime)*4.0; // in minutes of time
 }
 
-s_coord celestial(double jd, double lat, double lng, double hour, double tz){
+s_coord get_sun_pos(double jd, double lat, double lng, double hour, double tz){
 	FILE *file;
 	file = fopen("../log/time.txt","a+");
 
